@@ -16,6 +16,7 @@ interface GraphEditorProps {
   onGraphChange?: (graph: Graph) => void;
   onSelectionChange?: (selectedNodeIds: string[]) => void;
   evaluationResult?: unknown;
+  onRefreshEvaluation?: () => void;
 }
 
 export function GraphEditor({
@@ -26,7 +27,8 @@ export function GraphEditor({
   showStatusBar = true,
   className = '',
   onSelectionChange,
-  evaluationResult
+  evaluationResult,
+  onRefreshEvaluation
 }: GraphEditorProps) {
   return (
     <GraphProvider initialGraph={graph} externalDefinitions={definitions} onSelectionChange={onSelectionChange}>
@@ -49,7 +51,7 @@ export function GraphEditor({
           
           {showPropertiesPanel && (
             <div className="w-72 flex-shrink-0 border-l border-slate-700">
-              <PropertiesPanel evaluationResult={evaluationResult} />
+              <PropertiesPanel evaluationResult={evaluationResult} onRefreshEvaluation={onRefreshEvaluation} />
             </div>
           )}
         </div>
