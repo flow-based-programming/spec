@@ -14,43 +14,74 @@ export function GraphCanvas() {
   const { goUp, canGoUp, diveInto } = useNavigation();
   
   const svgRef = useRef<SVGSVGElement>(null);
+  const bgRef = useRef<SVGRectElement>(null);
   const [isPanning, setIsPanning] = useState(false);
   const [connectingEnd, setConnectingEnd] = useState<Point | null>(null);
   const panStart = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    
-    if (e.ctrlKey || e.metaKey) {
-      const rect = svgRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      
-      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
-      const newZoom = clamp(state.view.zoom * zoomFactor, MIN_ZOOM, MAX_ZOOM);
-      
-      const canvasPoint = screenToCanvas({ x: mouseX, y: mouseY }, state.view.pan, state.view.zoom);
-      const newPanX = mouseX - canvasPoint.x * newZoom;
-      const newPanY = mouseY - canvasPoint.y * newZoom;
-      
-      dispatch({ type: 'SET_VIEW', view: { zoom: newZoom, pan: { x: newPanX, y: newPanY } } });
-    } else {
-      dispatch({
-        type: 'SET_VIEW',
-        view: {
-          pan: {
-            x: state.view.pan.x - e.deltaX,
-            y: state.view.pan.y - e.deltaY
+  // Use refs to access current state in native event handlers
+  const viewRef = useRef(state.view);
+  viewRef.current = state.view;
+
+  // Native wheel handler to properly prevent browser zoom
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+
+      const view = viewRef.current;
+
+      if (e.ctrlKey || e.metaKey) {
+        const rect = svg.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+        const newZoom = clamp(view.zoom * zoomFactor, MIN_ZOOM, MAX_ZOOM);
+
+        const canvasPoint = screenToCanvas({ x: mouseX, y: mouseY }, view.pan, view.zoom);
+        const newPanX = mouseX - canvasPoint.x * newZoom;
+        const newPanY = mouseY - canvasPoint.y * newZoom;
+
+        dispatch({ type: 'SET_VIEW', view: { zoom: newZoom, pan: { x: newPanX, y: newPanY } } });
+      } else {
+        dispatch({
+          type: 'SET_VIEW',
+          view: {
+            pan: {
+              x: view.pan.x - e.deltaX,
+              y: view.pan.y - e.deltaY
+            }
           }
-        }
-      });
-    }
-  }, [state.view, dispatch]);
+        });
+      }
+    };
+
+    // Prevent Safari gesture zoom
+    const handleGesture = (e: Event) => {
+      e.preventDefault();
+    };
+
+    // Add with passive: false to allow preventDefault
+    svg.addEventListener('wheel', handleWheel, { passive: false });
+    svg.addEventListener('gesturestart', handleGesture);
+    svg.addEventListener('gesturechange', handleGesture);
+    svg.addEventListener('gestureend', handleGesture);
+
+    return () => {
+      svg.removeEventListener('wheel', handleWheel);
+      svg.removeEventListener('gesturestart', handleGesture);
+      svg.removeEventListener('gesturechange', handleGesture);
+      svg.removeEventListener('gestureend', handleGesture);
+    };
+  }, [dispatch]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.target !== svgRef.current) return;
+    // Only handle clicks on the canvas background (svg or background rect)
+    const isCanvasClick = e.target === svgRef.current || e.target === bgRef.current;
+    if (!isCanvasClick) return;
     
     if (e.button === 1 || (e.button === 0 && e.altKey)) {
       setIsPanning(true);
@@ -231,11 +262,10 @@ export function GraphCanvas() {
     <svg
       ref={svgRef}
       className="w-full h-full bg-slate-950"
-      onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      style={{ cursor: isPanning ? 'grabbing' : 'default', userSelect: 'none' }}
+      style={{ cursor: isPanning ? 'grabbing' : 'default', userSelect: 'none', touchAction: 'none' }}
     >
       <defs>
         <pattern
@@ -249,7 +279,7 @@ export function GraphCanvas() {
         </pattern>
       </defs>
       
-      <rect width="100%" height="100%" fill="url(#grid)" />
+      <rect ref={bgRef} width="100%" height="100%" fill="url(#grid)" />
 
       <g transform={`translate(${state.view.pan.x}, ${state.view.pan.y}) scale(${state.view.zoom})`}>
         {state.graph.edges.map((edge, i) => (
