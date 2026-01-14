@@ -17,8 +17,8 @@
   "dependencies": {
     "@emotion/react": "11.10.6",
     "@emotion/styled": "11.10.6",
-    "@fbp/litegraph": "^0.2.0",
-    "@fbp/types": "^0.2.0",
+    "@fbp/litegraph": "workspace:*",
+    "@fbp/types": "workspace:*",
     "@interchain-ui/react": "^1.21.16",
     "framer-motion": "9.0.7",
     "litegraph.js": "^0.7.18",

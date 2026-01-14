@@ -5,10 +5,10 @@
   <br/>
   Flow-Based Programming schemas and converters for litegraph
   <br />
-  <a href="https://github.com/interweb-inc/data-flow/actions/workflows/run-tests.yaml">
-    <img height="20" src="https://github.com/interweb-inc/data-flow/actions/workflows/run-tests.yaml/badge.svg" />
+  <a href="https://github.com/constructive-io/fpb/actions/workflows/run-tests.yaml">
+    <img height="20" src="https://github.com/constructive-io/fpb/actions/workflows/run-tests.yaml/badge.svg" />
   </a>
-   <a href="https://github.com/interweb-inc/data-flow/blob/main/LICENSE">
+   <a href="https://github.com/constructive-io/fpb/blob/main/LICENSE">
     <img height="20" src="https://img.shields.io/badge/license-MIT-blue.svg"/>
   </a>
 </p>

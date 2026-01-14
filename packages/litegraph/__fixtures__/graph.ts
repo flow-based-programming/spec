@@ -1,11 +1,15 @@
 import { Graph } from '@fbp/types';
 
 export const graph: Graph = {
-  type: 'Graph',
   name: 'default',
+  context: 'litegraph',
+  category: 'graph',
+  type: 'Graph',
   nodes: [
     {
       name: 'add1',
+      context: 'litegraph',
+      category: 'default',
       type: 'js/math/add',
       inputs: [
         {
@@ -27,10 +31,12 @@ export const graph: Graph = {
           type: 'number',
         },
       ],
-      properties: [],
+      props: [],
     },
     {
       name: 'mult1',
+      context: 'litegraph',
+      category: 'default',
       type: 'js/math/mult',
       inputs: [
         {
@@ -52,7 +58,7 @@ export const graph: Graph = {
           type: 'number',
         },
       ],
-      properties: [],
+      props: [],
     }
   ],
   edges: [

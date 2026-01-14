@@ -1,25 +1,24 @@
 {
-  "lerna": "6",
-  "conventionalCommits": true,
-  "npmClient": "yarn",
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
+  "version": "independent",
+  "npmClient": "pnpm",
   "npmClientArgs": [
-    "--no-lockfile"
+    "--frozen-lockfile"
   ],
   "packages": [
-    "packages/*",
-    "www/*"
+    "packages/*"
   ],
-  "version": "independent",
   "registry": "https://registry.npmjs.org",
   "command": {
     "create": {
-      "homepage": "https://github.com/interweb-inc/data-flow",
-      "license": "SEE LICENSE IN LICENSE",
+      "homepage": "https://github.com/constructive-io/fbp",
+      "license": "MIT",
       "access": "restricted"
     },
     "publish": {
       "allowBranch": "main",
-      "message": "chore(release): publish"
+      "message": "chore(release): publish",
+      "conventionalCommits": true
     }
   }
 }

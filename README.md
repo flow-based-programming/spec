@@ -1,15 +1,14 @@
-# data-flow
+# fbp
 
 <p align="center" width="100%">
-  <img src="https://github.com/cosmology-tech/interweb-utils/assets/545047/89c743c4-be88-409f-9a77-4b02cd7fe9a4" width="80">
-  <br/>
-  Flow-Based Programming TypeScript utilities for the Interweb
-  <br />
-  <a href="https://github.com/interweb-inc/data-flow/actions/workflows/run-tests.yaml">
-    <img height="20" src="https://github.com/interweb-inc/data-flow/actions/workflows/run-tests.yaml/badge.svg" />
-  </a>
-   <a href="https://github.com/interweb-inc/data-flow/blob/main/LICENSE">
-    <img height="20" src="https://img.shields.io/badge/license-MIT-blue.svg"/>
+  <img height="250" src="https://raw.githubusercontent.com/constructive-io/constructive/refs/heads/main/assets/outline-logo.svg" />
+</p>
+
+Flow-Based Programming TypeScript utilities for the Interweb
+
+<p align="center" width="100%">
+  <a href="https://github.com/constructive-io/fbp/actions/workflows/ci.yml">
+    <img height="20" src="https://github.com/constructive-io/fbp/actions/workflows/ci.yml/badge.svg" />
   </a>
 </p>
 
@@ -17,8 +16,15 @@
 
 This repository contains the following packages:
 
-- [`@fbp/types`](https://github.com/interweb-inc/data-flow/tree/main/packages/types)  
+- [`@fbp/types`](https://github.com/constructive-io/fpb/tree/main/packages/types)  
   Flow-Based Programming TypeScript Types & Definitions
 
-- [`@fbp/litegraph`](https://github.com/interweb-inc/data-flow/tree/main/packages/litegraph)  
-  Flow-Based Programming Integration/Conversions for Litegraph
+## Credits
+
+**🛠 Built by the [Constructive](https://constructive.io) team — creators of modular Postgres tooling for secure, composable backends. If you like our work, contribute on [GitHub](https://github.com/constructive-io).**
+
+## Disclaimer
+
+AS DESCRIBED IN THE LICENSES, THE SOFTWARE IS PROVIDED "AS IS", AT YOUR OWN RISK, AND WITHOUT WARRANTIES OF ANY KIND.
+
+No developer or entity involved in creating this software will be liable for any claims or damages whatsoever associated with your use, inability to use, or your interaction with other users of the code, including any direct, indirect, incidental, special, exemplary, punitive or consequential damages, or loss of profits, cryptocurrencies, tokens, or anything else of value.
