@@ -7,8 +7,8 @@
 Flow-Based Programming TypeScript utilities for the Interweb
 
 <p align="center" width="100%">
-  <a href="https://github.com/pyramation/fbp/actions/workflows/ci.yml">
-    <img height="20" src="https://github.com/pyramation/fbp/actions/workflows/ci.yml/badge.svg" />
+  <a href="https://github.com/constructive-io/fbp/actions/workflows/ci.yml">
+    <img height="20" src="https://github.com/constructive-io/fbp/actions/workflows/ci.yml/badge.svg" />
   </a>
 </p>
 

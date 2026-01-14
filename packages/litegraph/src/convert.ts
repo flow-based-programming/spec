@@ -9,7 +9,7 @@ export function convertToLitegraph(graph: Graph): Litegraph {
     title: node.name,
     // Ensure pos is always a tuple of [number, number]
     pos: [node.meta?.x || 0, node.meta?.y || 0] as [number, number],
-    value: node.properties?.reduce((acc, prop) => ({ ...acc, [prop.name]: prop.value }), undefined),
+    value: node.params?.reduce((acc, prop) => ({ ...acc, [prop.name]: prop.value }), undefined),
     inputs: node.inputs?.map(input => ({
       name: input.name,
       type: input.type,
@@ -57,6 +57,8 @@ export function convertFromLitegraph(litegraph: Litegraph): Graph {
   const nodes: Node[] = litegraph.nodes.map(node => {
     const lightNode: Node = {
       name: node.title,
+      context: 'litegraph',
+      category: 'default',
       type: node.type,
       meta: {
         x: node.pos[0],
@@ -70,7 +72,7 @@ export function convertFromLitegraph(litegraph: Litegraph): Graph {
         name: output.name,
         type: output.type
       })) || [],
-      properties: node.value ? Object.keys(node.value).map(key => ({
+      params: node.value ? Object.keys(node.value).map(key => ({
         name: key,
         type: typeof node.value[key], // Assumes all values are singular types
         value: node.value[key]
@@ -92,6 +94,8 @@ export function convertFromLitegraph(litegraph: Litegraph): Graph {
 
   return {
     name: 'default',
+    context: 'litegraph',
+    category: 'graph',
     type: 'Graph',
     nodes,
     edges

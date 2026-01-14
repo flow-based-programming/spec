@@ -11,7 +11,7 @@
   "registry": "https://registry.npmjs.org",
   "command": {
     "create": {
-      "homepage": "https://github.com/pyramation/fbp",
+      "homepage": "https://github.com/constructive-io/fbp",
       "license": "MIT",
       "access": "restricted"
     },
