@@ -33,6 +33,7 @@ export interface GraphEditorState {
     active: boolean;
     start: Point | null;
     end: Point | null;
+    previewNodeIds: Set<string>;
   };
 }
 
@@ -59,6 +60,7 @@ type GraphAction =
   | { type: 'CANCEL_CONNECTING' }
   | { type: 'START_BOX_SELECT'; start: Point }
   | { type: 'UPDATE_BOX_SELECT'; end: Point }
+  | { type: 'MOVE_BOX_SELECT'; delta: Point }
   | { type: 'END_BOX_SELECT' };
 
 function generateId(): string {
@@ -313,30 +315,64 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       return { ...state, connecting: { active: false, sourceNode: null, sourcePort: null, isOutput: false } };
 
     case 'START_BOX_SELECT':
-      return { ...state, boxSelect: { active: true, start: action.start, end: action.start } };
+      return { ...state, boxSelect: { active: true, start: action.start, end: action.start, previewNodeIds: new Set() } };
 
-    case 'UPDATE_BOX_SELECT':
-      return { ...state, boxSelect: { ...state.boxSelect, end: action.end } };
+    case 'UPDATE_BOX_SELECT': {
+      const start = state.boxSelect.start;
+      const end = action.end;
+      if (!start) return state;
+
+      const minX = Math.min(start.x, end.x);
+      const maxX = Math.max(start.x, end.x);
+      const minY = Math.min(start.y, end.y);
+      const maxY = Math.max(start.y, end.y);
+
+      const previewNodeIds = new Set(
+        state.graph.nodes
+          .filter(n => {
+            const x = n.meta?.x || 0;
+            const y = n.meta?.y || 0;
+            return x >= minX && x <= maxX && y >= minY && y <= maxY;
+          })
+          .map(n => n.name)
+      );
+
+      return { ...state, boxSelect: { ...state.boxSelect, end, previewNodeIds } };
+    }
+
+    case 'MOVE_BOX_SELECT': {
+      const { start, end } = state.boxSelect;
+      if (!start || !end) return state;
+
+      const newStart = { x: start.x + action.delta.x, y: start.y + action.delta.y };
+      const newEnd = { x: end.x + action.delta.x, y: end.y + action.delta.y };
+
+      const minX = Math.min(newStart.x, newEnd.x);
+      const maxX = Math.max(newStart.x, newEnd.x);
+      const minY = Math.min(newStart.y, newEnd.y);
+      const maxY = Math.max(newStart.y, newEnd.y);
+
+      const previewNodeIds = new Set(
+        state.graph.nodes
+          .filter(n => {
+            const x = n.meta?.x || 0;
+            const y = n.meta?.y || 0;
+            return x >= minX && x <= maxX && y >= minY && y <= maxY;
+          })
+          .map(n => n.name)
+      );
+
+      return { ...state, boxSelect: { ...state.boxSelect, start: newStart, end: newEnd, previewNodeIds } };
+    }
 
     case 'END_BOX_SELECT': {
-      if (!state.boxSelect.start || !state.boxSelect.end) {
-        return { ...state, boxSelect: { active: false, start: null, end: null } };
-      }
-      const minX = Math.min(state.boxSelect.start.x, state.boxSelect.end.x);
-      const maxX = Math.max(state.boxSelect.start.x, state.boxSelect.end.x);
-      const minY = Math.min(state.boxSelect.start.y, state.boxSelect.end.y);
-      const maxY = Math.max(state.boxSelect.start.y, state.boxSelect.end.y);
-      
-      const nodesInBox = state.graph.nodes.filter(n => {
-        const x = n.meta?.x || 0;
-        const y = n.meta?.y || 0;
-        return x >= minX && x <= maxX && y >= minY && y <= maxY;
-      });
-      
+      // Use the already-calculated preview nodes for selection
+      const previewNodeIds = state.boxSelect.previewNodeIds;
+
       return {
         ...state,
-        boxSelect: { active: false, start: null, end: null },
-        selection: { ...state.selection, nodeIds: new Set(nodesInBox.map(n => n.name)) }
+        boxSelect: { active: false, start: null, end: null, previewNodeIds: new Set() },
+        selection: { ...state.selection, nodeIds: previewNodeIds }
       };
     }
 
@@ -353,7 +389,7 @@ const initialState: GraphEditorState = {
   navigationStack: [],
   currentScope: null,
   connecting: { active: false, sourceNode: null, sourcePort: null, isOutput: false },
-  boxSelect: { active: false, start: null, end: null }
+  boxSelect: { active: false, start: null, end: null, previewNodeIds: new Set() }
 };
 
 interface GraphContextValue {

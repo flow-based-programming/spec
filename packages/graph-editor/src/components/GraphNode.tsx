@@ -24,6 +24,7 @@ export function GraphNode({ node, onStartConnect, onEndConnect }: GraphNodeProps
 
   const definition = getDefinition(node.type);
   const isSelected = selection.nodeIds.has(node.name);
+  const isPreview = state.boxSelect.previewNodeIds.has(node.name);
   const isSubnet = node.nodes && node.nodes.length > 0;
   
   const inputs = node.inputs || definition?.inputs || [];
@@ -148,8 +149,8 @@ export function GraphNode({ node, onStartConnect, onEndConnect }: GraphNodeProps
         rx={8}
         ry={8}
         fill="none"
-        stroke={isSelected ? '#3b82f6' : '#334155'}
-        strokeWidth={isSelected ? 2 : 1}
+        stroke={isSelected || isPreview ? '#3b82f6' : '#334155'}
+        strokeWidth={isSelected || isPreview ? 2 : 1}
       />
       
       <text

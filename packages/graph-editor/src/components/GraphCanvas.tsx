@@ -16,8 +16,10 @@ export function GraphCanvas() {
   const svgRef = useRef<SVGSVGElement>(null);
   const bgRef = useRef<SVGRectElement>(null);
   const [isPanning, setIsPanning] = useState(false);
+  const [isSpaceHeld, setIsSpaceHeld] = useState(false);
   const [connectingEnd, setConnectingEnd] = useState<Point | null>(null);
   const panStart = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
+  const lastMousePos = useRef<Point | null>(null);
 
   // Use refs to access current state in native event handlers
   const viewRef = useRef(state.view);
@@ -82,8 +84,9 @@ export function GraphCanvas() {
     // Only handle clicks on the canvas background (svg or background rect)
     const isCanvasClick = e.target === svgRef.current || e.target === bgRef.current;
     if (!isCanvasClick) return;
-    
-    if (e.button === 1 || (e.button === 0 && e.altKey)) {
+
+    // Pan mode: middle mouse, alt+click, or spacebar+click
+    if (e.button === 1 || (e.button === 0 && e.altKey) || (e.button === 0 && isSpaceHeld)) {
       setIsPanning(true);
       panStart.current = {
         x: e.clientX,
@@ -94,11 +97,11 @@ export function GraphCanvas() {
       return;
     }
 
-    if (e.button === 0 && !e.shiftKey) {
-      clearSelection();
-    }
-
-    if (e.button === 0 && e.shiftKey) {
+    // Left click on canvas: clear selection and start marquee
+    if (e.button === 0) {
+      if (!e.shiftKey) {
+        clearSelection();
+      }
       const rect = svgRef.current?.getBoundingClientRect();
       if (!rect) return;
       const canvasPoint = screenToCanvas(
@@ -108,9 +111,18 @@ export function GraphCanvas() {
       );
       dispatch({ type: 'START_BOX_SELECT', start: canvasPoint });
     }
-  }, [state.view, clearSelection, dispatch]);
+  }, [state.view, isSpaceHeld, clearSelection, dispatch]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const rect = svgRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const currentCanvasPoint = screenToCanvas(
+      { x: e.clientX - rect.left, y: e.clientY - rect.top },
+      state.view.pan,
+      state.view.zoom
+    );
+
     if (isPanning && panStart.current) {
       const dx = e.clientX - panStart.current.x;
       const dy = e.clientY - panStart.current.y;
@@ -118,31 +130,30 @@ export function GraphCanvas() {
         type: 'SET_VIEW',
         view: { pan: { x: panStart.current.panX + dx, y: panStart.current.panY + dy } }
       });
+      lastMousePos.current = currentCanvasPoint;
       return;
     }
 
     if (state.boxSelect.active) {
-      const rect = svgRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      const canvasPoint = screenToCanvas(
-        { x: e.clientX - rect.left, y: e.clientY - rect.top },
-        state.view.pan,
-        state.view.zoom
-      );
-      dispatch({ type: 'UPDATE_BOX_SELECT', end: canvasPoint });
+      if (isSpaceHeld && lastMousePos.current) {
+        // Move the entire marquee
+        const delta = {
+          x: currentCanvasPoint.x - lastMousePos.current.x,
+          y: currentCanvasPoint.y - lastMousePos.current.y
+        };
+        dispatch({ type: 'MOVE_BOX_SELECT', delta });
+      } else {
+        // Normal marquee resize
+        dispatch({ type: 'UPDATE_BOX_SELECT', end: currentCanvasPoint });
+      }
     }
 
     if (state.connecting.active) {
-      const rect = svgRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      const canvasPoint = screenToCanvas(
-        { x: e.clientX - rect.left, y: e.clientY - rect.top },
-        state.view.pan,
-        state.view.zoom
-      );
-      setConnectingEnd(canvasPoint);
+      setConnectingEnd(currentCanvasPoint);
     }
-  }, [isPanning, state.boxSelect.active, state.connecting.active, state.view, dispatch]);
+
+    lastMousePos.current = currentCanvasPoint;
+  }, [isPanning, isSpaceHeld, state.boxSelect.active, state.connecting.active, state.view, dispatch]);
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
     if (isPanning) {
@@ -186,6 +197,13 @@ export function GraphCanvas() {
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
+    // Spacebar for pan mode
+    if (e.code === 'Space' && !e.repeat) {
+      e.preventDefault();
+      setIsSpaceHeld(true);
+      return;
+    }
+
     switch (e.key) {
       case 'Delete':
       case 'Backspace':
@@ -226,10 +244,20 @@ export function GraphCanvas() {
     }
   }, [deleteSelection, duplicateSelection, selectAll, clearSelection, canGoUp, goUp, diveInto, state.selection.nodeIds, state.graph.nodes, state.connecting.active, dispatch]);
 
+  const handleKeyUp = useCallback((e: KeyboardEvent) => {
+    if (e.code === 'Space') {
+      setIsSpaceHeld(false);
+    }
+  }, []);
+
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [handleKeyDown, handleKeyUp]);
 
   const getConnectingStartPos = (): Point | null => {
     if (!state.connecting.active || !state.connecting.sourceNode || !state.connecting.sourcePort) {
@@ -265,7 +293,7 @@ export function GraphCanvas() {
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      style={{ cursor: isPanning ? 'grabbing' : 'default', userSelect: 'none', touchAction: 'none' }}
+      style={{ cursor: isPanning ? 'grabbing' : isSpaceHeld ? 'grab' : 'default', userSelect: 'none', touchAction: 'none' }}
     >
       <defs>
         <pattern
