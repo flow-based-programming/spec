@@ -12,9 +12,8 @@ export interface Port {
 }
 export interface Ref {
   ref: string;
-  dialect?: string;
 }
-export interface Param {
+export interface Prop {
   name: string;
   type: string;
   value?: Ref | any;
@@ -35,18 +34,17 @@ export interface Group {
   nodes: string[];
   meta?: Metadata;
 }
-export type NodeKind = "node" | "subnet" | "graphInput" | "graphOutput";
+export type NodeKind = "node" | "subnet" | "graphInput" | "graphOutput" | "graphProp";
 export interface Node {
   name: string;
   kind?: NodeKind;
   context: string;
   category: string;
   type: string;
-  typeVersion?: number;
   meta?: Metadata;
   inputs?: Port[];
   outputs?: Port[];
-  params?: Param[];
+  props?: Prop[];
   nodes?: Node[];
   edges?: Edge[];
   groups?: Group[];
