@@ -21,15 +21,20 @@ export interface ClipboardState {
   edges: Edge[];
 }
 
+// Per-scope state that persists when navigating between scopes
+export interface ScopeState {
+  selection: SelectionState;
+  view: ViewState;
+}
+
 export interface GraphEditorState {
   graph: Graph;
   definitions: Map<string, NodeDefinition>;
   view: ViewState;
   selection: SelectionState;
-  selectionByScope: Map<string, SelectionState>; // Preserve selections per scope
+  stateByPath: Map<string, ScopeState>; // Persist state per cwd path
   clipboard: ClipboardState;
-  navigationStack: string[];
-  currentScope: string | null;
+  cwd: string; // Current working directory: "/" for root, "/subnet1" for nested
   connecting: {
     active: boolean;
     sourceNode: string | null;
@@ -84,8 +89,18 @@ function getEdgeId(edge: Edge): string {
   return `${edge.src.node}:${edge.src.port}->${edge.dst.node}:${edge.dst.port}`;
 }
 
-function getNodesInScope(graph: Graph, scope: string | null): Node[] {
-  if (!scope) return graph.nodes;
+// Convert cwd to path segments: "/" -> [], "/subnet1" -> ["subnet1"], "/subnet1/subnet2" -> ["subnet1", "subnet2"]
+function cwdToPath(cwd: string): string[] {
+  return cwd.split('/').filter(Boolean);
+}
+
+// Check if cwd is at root level
+function isRootCwd(cwd: string): boolean {
+  return cwd === '/';
+}
+
+function getNodesInScope(graph: Graph, cwd: string): Node[] {
+  if (isRootCwd(cwd)) return graph.nodes;
   
   const findNode = (nodes: Node[], path: string[]): Node | null => {
     if (path.length === 0) return null;
@@ -95,13 +110,13 @@ function getNodesInScope(graph: Graph, scope: string | null): Node[] {
     return findNode(node.nodes || [], path.slice(1));
   };
   
-  const scopePath = scope.split('/');
+  const scopePath = cwdToPath(cwd);
   const scopeNode = findNode(graph.nodes, scopePath);
   return scopeNode?.nodes || [];
 }
 
-function getEdgesInScope(graph: Graph, scope: string | null): Edge[] {
-  if (!scope) return graph.edges;
+function getEdgesInScope(graph: Graph, cwd: string): Edge[] {
+  if (isRootCwd(cwd)) return graph.edges;
   
   const findNode = (nodes: Node[], path: string[]): Node | null => {
     if (path.length === 0) return null;
@@ -111,7 +126,7 @@ function getEdgesInScope(graph: Graph, scope: string | null): Edge[] {
     return findNode(node.nodes || [], path.slice(1));
   };
   
-  const scopePath = scope.split('/');
+  const scopePath = cwdToPath(cwd);
   const scopeNode = findNode(graph.nodes, scopePath);
   return scopeNode?.edges || [];
 }
@@ -125,13 +140,13 @@ function findNodeAtPath(nodes: Node[], path: string[]): Node | null {
   return findNodeAtPath(node.nodes || [], path.slice(1));
 }
 
-// Helper to update nodes at a given scope
-function updateNodesAtScope(graph: Graph, scope: string | null, updater: (nodes: Node[]) => Node[]): Graph {
-  if (!scope) {
+// Helper to update nodes at a given cwd
+function updateNodesAtScope(graph: Graph, cwd: string, updater: (nodes: Node[]) => Node[]): Graph {
+  if (isRootCwd(cwd)) {
     return { ...graph, nodes: updater(graph.nodes) };
   }
   
-  const scopePath = scope.split('/');
+  const scopePath = cwdToPath(cwd);
   
   const updateRecursive = (nodes: Node[], path: string[]): Node[] => {
     if (path.length === 0) return updater(nodes);
@@ -147,13 +162,13 @@ function updateNodesAtScope(graph: Graph, scope: string | null, updater: (nodes:
   return { ...graph, nodes: updateRecursive(graph.nodes, scopePath) };
 }
 
-// Helper to update edges at a given scope
-function updateEdgesAtScope(graph: Graph, scope: string | null, updater: (edges: Edge[]) => Edge[]): Graph {
-  if (!scope) {
+// Helper to update edges at a given cwd
+function updateEdgesAtScope(graph: Graph, cwd: string, updater: (edges: Edge[]) => Edge[]): Graph {
+  if (isRootCwd(cwd)) {
     return { ...graph, edges: updater(graph.edges) };
   }
   
-  const scopePath = scope.split('/');
+  const scopePath = cwdToPath(cwd);
   
   const updateRecursive = (nodes: Node[], path: string[]): Node[] => {
     if (path.length === 0) return nodes;
@@ -191,7 +206,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
     }
 
     case 'ADD_NODE': {
-      const newGraph = updateNodesAtScope(state.graph, state.currentScope, nodes => [...nodes, action.node]);
+      const newGraph = updateNodesAtScope(state.graph, state.cwd, nodes => [...nodes, action.node]);
       return { ...state, graph: newGraph };
     }
 
@@ -203,7 +218,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       const kind = boundaryType === 'input' ? 'graphInput' : boundaryType === 'output' ? 'graphOutput' : 'graphProp';
       
       // Count existing boundary nodes of this type to generate next number (scope-aware)
-      const scopedNodes = getNodesInScope(state.graph, state.currentScope);
+      const scopedNodes = getNodesInScope(state.graph, state.cwd);
       const existingNodes = scopedNodes.filter(n => n.name.startsWith(prefix + baseName));
       const existingNumbers = existingNodes.map(n => {
         const match = n.name.match(new RegExp(`^${prefix}${baseName}(\\d+)$`));
@@ -221,10 +236,10 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       };
       
       // Add node at current scope
-      const newGraph = updateNodesAtScope(state.graph, state.currentScope, nodes => [...nodes, newNode]);
+      const newGraph = updateNodesAtScope(state.graph, state.cwd, nodes => [...nodes, newNode]);
       
       // Update graph interface arrays (only for top-level scope)
-      if (!state.currentScope) {
+      if (isRootCwd(state.cwd)) {
         const newPort = { name: portName, type: 'any' };
         let inputs = state.graph.inputs || [];
         let outputs = state.graph.outputs || [];
@@ -250,26 +265,26 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
     case 'UPDATE_NODE': {
       const updateNodeInList = (nodes: Node[]): Node[] =>
         nodes.map(n => n.name === action.nodeId ? { ...n, ...action.updates } : n);
-      const newGraph = updateNodesAtScope(state.graph, state.currentScope, updateNodeInList);
+      const newGraph = updateNodesAtScope(state.graph, state.cwd, updateNodeInList);
       return { ...state, graph: newGraph };
     }
 
     case 'DELETE_NODES': {
       const nodeIdSet = new Set(action.nodeIds);
-      const scopedNodes = getNodesInScope(state.graph, state.currentScope);
+      const scopedNodes = getNodesInScope(state.graph, state.cwd);
       
       // Delete nodes at current scope
-      let newGraph = updateNodesAtScope(state.graph, state.currentScope, 
+      let newGraph = updateNodesAtScope(state.graph, state.cwd, 
         nodes => nodes.filter(n => !nodeIdSet.has(n.name))
       );
       
       // Delete edges that reference deleted nodes at current scope
-      newGraph = updateEdgesAtScope(newGraph, state.currentScope,
+      newGraph = updateEdgesAtScope(newGraph, state.cwd,
         edges => edges.filter(e => !nodeIdSet.has(e.src.node) && !nodeIdSet.has(e.dst.node))
       );
       
       // Remove boundary node entries from graph.inputs/outputs/props (only for top-level scope)
-      if (!state.currentScope) {
+      if (isRootCwd(state.cwd)) {
         const deletedNodes = scopedNodes.filter(n => nodeIdSet.has(n.name));
         const deletedInputNames = new Set(
           deletedNodes
@@ -302,13 +317,13 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
     }
 
     case 'ADD_EDGE': {
-      const newGraph = updateEdgesAtScope(state.graph, state.currentScope, edges => [...edges, action.edge]);
+      const newGraph = updateEdgesAtScope(state.graph, state.cwd, edges => [...edges, action.edge]);
       return { ...state, graph: newGraph };
     }
 
     case 'DELETE_EDGES': {
       const edgeIdSet = new Set(action.edgeIds);
-      const newGraph = updateEdgesAtScope(state.graph, state.currentScope, 
+      const newGraph = updateEdgesAtScope(state.graph, state.cwd, 
         edges => edges.filter(e => !edgeIdSet.has(getEdgeId(e)))
       );
       return {
@@ -330,7 +345,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
             : [...props, newProp];
           return { ...n, props: newProps };
         });
-      const newGraph = updateNodesAtScope(state.graph, state.currentScope, updateProps);
+      const newGraph = updateNodesAtScope(state.graph, state.cwd, updateProps);
       return { ...state, graph: newGraph };
     }
 
@@ -356,8 +371,8 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       return { ...state, selection: { nodeIds: new Set(), edgeIds: new Set() } };
 
     case 'SELECT_ALL': {
-      const nodes = getNodesInScope(state.graph, state.currentScope);
-      const edges = getEdgesInScope(state.graph, state.currentScope);
+      const nodes = getNodesInScope(state.graph, state.cwd);
+      const edges = getEdgesInScope(state.graph, state.cwd);
       return {
         ...state,
         selection: {
@@ -368,8 +383,8 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
     }
 
     case 'DUPLICATE_SELECTION': {
-      const scopedNodes = getNodesInScope(state.graph, state.currentScope);
-      const scopedEdges = getEdgesInScope(state.graph, state.currentScope);
+      const scopedNodes = getNodesInScope(state.graph, state.cwd);
+      const scopedEdges = getEdgesInScope(state.graph, state.cwd);
       const selectedNodes = scopedNodes.filter(n => state.selection.nodeIds.has(n.name));
       const nameMap = new Map<string, string>();
       const duplicatedNodes = selectedNodes.map(n => {
@@ -388,8 +403,8 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
           dst: { node: nameMap.get(e.dst.node) || e.dst.node, port: e.dst.port }
         }));
       
-      let newGraph = updateNodesAtScope(state.graph, state.currentScope, nodes => [...nodes, ...duplicatedNodes]);
-      newGraph = updateEdgesAtScope(newGraph, state.currentScope, edges => [...edges, ...duplicatedEdges]);
+      let newGraph = updateNodesAtScope(state.graph, state.cwd, nodes => [...nodes, ...duplicatedNodes]);
+      newGraph = updateEdgesAtScope(newGraph, state.cwd, edges => [...edges, ...duplicatedEdges]);
       
       return {
         ...state,
@@ -399,8 +414,8 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
     }
 
     case 'COPY_SELECTION': {
-      const scopedNodes = getNodesInScope(state.graph, state.currentScope);
-      const scopedEdges = getEdgesInScope(state.graph, state.currentScope);
+      const scopedNodes = getNodesInScope(state.graph, state.cwd);
+      const scopedEdges = getEdgesInScope(state.graph, state.cwd);
       const selectedNodes = scopedNodes.filter(n => state.selection.nodeIds.has(n.name));
       const selectedEdges = scopedEdges.filter(
         e => state.selection.nodeIds.has(e.src.node) && state.selection.nodeIds.has(e.dst.node)
@@ -432,8 +447,8 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
         dst: { node: nameMap.get(e.dst.node) || e.dst.node, port: e.dst.port }
       }));
       
-      let newGraph = updateNodesAtScope(state.graph, state.currentScope, nodes => [...nodes, ...pastedNodes]);
-      newGraph = updateEdgesAtScope(newGraph, state.currentScope, edges => [...edges, ...pastedEdges]);
+      let newGraph = updateNodesAtScope(state.graph, state.cwd, nodes => [...nodes, ...pastedNodes]);
+      newGraph = updateEdgesAtScope(newGraph, state.cwd, edges => [...edges, ...pastedEdges]);
       
       return {
         ...state,
@@ -446,8 +461,8 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       const selectedNodeIds = state.selection.nodeIds;
       if (selectedNodeIds.size < 1) return state;
 
-      const scopedNodes = getNodesInScope(state.graph, state.currentScope);
-      const scopedEdges = getEdgesInScope(state.graph, state.currentScope);
+      const scopedNodes = getNodesInScope(state.graph, state.cwd);
+      const scopedEdges = getEdgesInScope(state.graph, state.cwd);
       const selectedNodes = scopedNodes.filter(n => selectedNodeIds.has(n.name));
       
       // Calculate center position for the subnet node
@@ -586,11 +601,11 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       };
 
       // Remove selected nodes and their edges from current scope, add subnet node
-      let newGraph = updateNodesAtScope(state.graph, state.currentScope, nodes => {
+      let newGraph = updateNodesAtScope(state.graph, state.cwd, nodes => {
         const remaining = nodes.filter(n => !selectedNodeIds.has(n.name));
         return [...remaining, subnetNode];
       });
-      newGraph = updateEdgesAtScope(newGraph, state.currentScope, edges => {
+      newGraph = updateEdgesAtScope(newGraph, state.cwd, edges => {
         const remaining = edges.filter(e => 
           !selectedNodeIds.has(e.src.node) && !selectedNodeIds.has(e.dst.node)
         );
@@ -606,7 +621,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
 
     case 'MOVE_NODES': {
       const nodeIdSet = new Set(action.nodeIds);
-      const newGraph = updateNodesAtScope(state.graph, state.currentScope, nodes =>
+      const newGraph = updateNodesAtScope(state.graph, state.cwd, nodes =>
         nodes.map(n => {
           if (!nodeIdSet.has(n.name)) return n;
           return {
@@ -626,49 +641,55 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       return { ...state, view: { ...state.view, ...action.view } };
 
     case 'DIVE_INTO': {
-      const scopedNodes = getNodesInScope(state.graph, state.currentScope);
+      const scopedNodes = getNodesInScope(state.graph, state.cwd);
       const node = scopedNodes.find(n => n.name === action.nodeId);
       if (!node || !node.nodes) return state;
-      const newScope = state.currentScope ? `${state.currentScope}/${action.nodeId}` : action.nodeId;
       
-      // Save current selection for this scope
-      const scopeKey = state.currentScope || '__root__';
-      const newSelectionByScope = new Map(state.selectionByScope);
-      newSelectionByScope.set(scopeKey, state.selection);
+      // Calculate new cwd: "/" + nodeId or currentCwd + "/" + nodeId
+      const newCwd = isRootCwd(state.cwd) ? `/${action.nodeId}` : `${state.cwd}/${action.nodeId}`;
       
-      // Restore selection for the new scope if it exists, otherwise clear
-      const newScopeKey = newScope;
-      const restoredSelection = state.selectionByScope.get(newScopeKey) || { nodeIds: new Set<string>(), edgeIds: new Set<string>() };
+      // Save current state for this path
+      const newStateByPath = new Map(state.stateByPath);
+      newStateByPath.set(state.cwd, { selection: state.selection, view: state.view });
+      
+      // Restore state for the new path if it exists, otherwise use defaults
+      const restoredState = state.stateByPath.get(newCwd);
+      const newSelection = restoredState?.selection || { nodeIds: new Set<string>(), edgeIds: new Set<string>() };
+      const newView = restoredState?.view || { pan: { x: 0, y: 0 }, zoom: 1 };
       
       return {
         ...state,
-        currentScope: newScope,
-        navigationStack: [...state.navigationStack, action.nodeId],
-        selection: restoredSelection,
-        selectionByScope: newSelectionByScope
+        cwd: newCwd,
+        selection: newSelection,
+        view: newView,
+        stateByPath: newStateByPath
       };
     }
 
     case 'GO_UP': {
-      if (state.navigationStack.length === 0) return state;
-      const newStack = state.navigationStack.slice(0, -1);
-      const newScope = newStack.length > 0 ? newStack.join('/') : null;
+      // Can't go up from root
+      if (isRootCwd(state.cwd)) return state;
       
-      // Save current selection for this scope
-      const scopeKey = state.currentScope || '__root__';
-      const newSelectionByScope = new Map(state.selectionByScope);
-      newSelectionByScope.set(scopeKey, state.selection);
+      // Calculate parent cwd: "/subnet1/subnet2" -> "/subnet1", "/subnet1" -> "/"
+      const pathSegments = cwdToPath(state.cwd);
+      pathSegments.pop();
+      const newCwd = pathSegments.length === 0 ? '/' : '/' + pathSegments.join('/');
       
-      // Restore selection for the parent scope if it exists, otherwise clear
-      const newScopeKey = newScope || '__root__';
-      const restoredSelection = state.selectionByScope.get(newScopeKey) || { nodeIds: new Set<string>(), edgeIds: new Set<string>() };
+      // Save current state for this path
+      const newStateByPath = new Map(state.stateByPath);
+      newStateByPath.set(state.cwd, { selection: state.selection, view: state.view });
+      
+      // Restore state for the parent path if it exists, otherwise use defaults
+      const restoredState = state.stateByPath.get(newCwd);
+      const newSelection = restoredState?.selection || { nodeIds: new Set<string>(), edgeIds: new Set<string>() };
+      const newView = restoredState?.view || { pan: { x: 0, y: 0 }, zoom: 1 };
       
       return {
         ...state,
-        currentScope: newScope,
-        navigationStack: newStack,
-        selection: restoredSelection,
-        selectionByScope: newSelectionByScope
+        cwd: newCwd,
+        selection: newSelection,
+        view: newView,
+        stateByPath: newStateByPath
       };
     }
 
@@ -696,7 +717,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
             src: { node: action.nodeId, port: action.portName },
             dst: { node: state.connecting.sourceNode, port: state.connecting.sourcePort }
           };
-      const newGraph = updateEdgesAtScope(state.graph, state.currentScope, edges => [...edges, edge]);
+      const newGraph = updateEdgesAtScope(state.graph, state.cwd, edges => [...edges, edge]);
       return {
         ...state,
         graph: newGraph,
@@ -720,7 +741,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       const minY = Math.min(start.y, end.y);
       const maxY = Math.max(start.y, end.y);
 
-      const scopedNodes = getNodesInScope(state.graph, state.currentScope);
+      const scopedNodes = getNodesInScope(state.graph, state.cwd);
       const previewNodeIds = new Set(
         scopedNodes
           .filter(n => {
@@ -746,7 +767,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       const minY = Math.min(newStart.y, newEnd.y);
       const maxY = Math.max(newStart.y, newEnd.y);
 
-      const scopedNodes = getNodesInScope(state.graph, state.currentScope);
+      const scopedNodes = getNodesInScope(state.graph, state.cwd);
       const previewNodeIds = new Set(
         scopedNodes
           .filter(n => {
@@ -781,10 +802,9 @@ const initialState: GraphEditorState = {
   definitions: new Map(),
   view: { pan: { x: 0, y: 0 }, zoom: 1 },
   selection: { nodeIds: new Set(), edgeIds: new Set() },
-  selectionByScope: new Map(),
+  stateByPath: new Map(),
   clipboard: { nodes: [], edges: [] },
-  navigationStack: [],
-  currentScope: null,
+  cwd: '/',
   connecting: { active: false, sourceNode: null, sourcePort: null, isOutput: false },
   boxSelect: { active: false, start: null, end: null, previewNodeIds: new Set() }
 };
@@ -867,18 +887,21 @@ export function useSelection() {
 
 export function useNavigation() {
   const { state, dispatch } = useGraph();
+  // Derive navigationStack from cwd: "/" -> [], "/subnet1" -> ["subnet1"], "/subnet1/subnet2" -> ["subnet1", "subnet2"]
+  const navigationStack = cwdToPath(state.cwd);
   return {
-    currentScope: state.currentScope,
-    navigationStack: state.navigationStack,
+    cwd: state.cwd,
+    currentScope: state.cwd, // Alias for backwards compatibility
+    navigationStack,
     diveInto: (nodeId: string) => dispatch({ type: 'DIVE_INTO', nodeId }),
     goUp: () => dispatch({ type: 'GO_UP' }),
-    canGoUp: state.navigationStack.length > 0
+    canGoUp: !isRootCwd(state.cwd)
   };
 }
 
 export function useScopedGraph() {
   const { state } = useGraph();
-  const nodes = getNodesInScope(state.graph, state.currentScope);
-  const edges = getEdgesInScope(state.graph, state.currentScope);
+  const nodes = getNodesInScope(state.graph, state.cwd);
+  const edges = getEdgesInScope(state.graph, state.cwd);
   return { nodes, edges };
 }

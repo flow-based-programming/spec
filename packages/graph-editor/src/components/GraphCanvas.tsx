@@ -359,11 +359,11 @@ export function GraphCanvas() {
         )}
       </g>
 
-      {state.navigationStack.length > 0 && (
+      {state.cwd !== '/' && (
         <g>
           <rect x={10} y={10} width={200} height={30} rx={4} fill="rgba(30, 41, 59, 0.9)" />
           <text x={20} y={30} fill="#94a3b8" fontSize={12} fontFamily="system-ui, sans-serif">
-            {state.navigationStack.join(' / ')}
+            {state.cwd}
           </text>
           <text x={180} y={30} fill="#64748b" fontSize={10} fontFamily="system-ui, sans-serif">
             U to go up
