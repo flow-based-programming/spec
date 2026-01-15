@@ -187,6 +187,95 @@ function updateEdgesAtScope(graph: Graph, cwd: string, updater: (edges: Edge[]) 
   return { ...graph, nodes: updateRecursive(graph.nodes, scopePath) };
 }
 
+// Auto-layout nodes in a layered/hierarchical arrangement
+// Inputs on left, outputs on right, other nodes in layers based on dependency depth
+function autoLayoutNodes(nodes: Node[], edges: Edge[]): Node[] {
+  const NODE_WIDTH = 180;
+  const NODE_SPACING_X = 250;
+  const NODE_SPACING_Y = 100;
+  const START_X = 50;
+  const START_Y = 50;
+
+  // Separate nodes by type
+  const inputNodes = nodes.filter(n => n.name.startsWith('@in/'));
+  const outputNodes = nodes.filter(n => n.name.startsWith('@out/'));
+  const propNodes = nodes.filter(n => n.name.startsWith('@prop/'));
+  const regularNodes = nodes.filter(n => 
+    !n.name.startsWith('@in/') && !n.name.startsWith('@out/') && !n.name.startsWith('@prop/')
+  );
+
+  // Build adjacency map for regular nodes (who depends on whom)
+  const nodeDepth = new Map<string, number>();
+  const nodeSet = new Set(regularNodes.map(n => n.name));
+  
+  // Initialize all regular nodes with depth 0
+  regularNodes.forEach(n => nodeDepth.set(n.name, 0));
+  
+  // Compute depth based on incoming edges (BFS-like approach)
+  // Depth = max depth of all nodes that feed into this node + 1
+  let changed = true;
+  let iterations = 0;
+  while (changed && iterations < 100) {
+    changed = false;
+    iterations++;
+    edges.forEach(edge => {
+      if (nodeSet.has(edge.src.node) && nodeSet.has(edge.dst.node)) {
+        const srcDepth = nodeDepth.get(edge.src.node) || 0;
+        const dstDepth = nodeDepth.get(edge.dst.node) || 0;
+        if (dstDepth <= srcDepth) {
+          nodeDepth.set(edge.dst.node, srcDepth + 1);
+          changed = true;
+        }
+      }
+    });
+  }
+
+  // Group regular nodes by depth
+  const layers = new Map<number, Node[]>();
+  regularNodes.forEach(n => {
+    const depth = nodeDepth.get(n.name) || 0;
+    if (!layers.has(depth)) layers.set(depth, []);
+    layers.get(depth)!.push(n);
+  });
+
+  // Calculate number of layers for positioning
+  const maxDepth = Math.max(0, ...Array.from(layers.keys()));
+  const totalLayers = maxDepth + 3; // +1 for inputs, +1 for outputs, +1 for props
+
+  // Position input nodes (layer 0)
+  const positionedInputs = inputNodes.map((n, i) => ({
+    ...n,
+    meta: { ...n.meta, x: START_X, y: START_Y + i * NODE_SPACING_Y }
+  }));
+
+  // Position prop nodes (below inputs)
+  const positionedProps = propNodes.map((n, i) => ({
+    ...n,
+    meta: { ...n.meta, x: START_X, y: START_Y + (inputNodes.length + i) * NODE_SPACING_Y }
+  }));
+
+  // Position regular nodes by layer
+  const positionedRegular: Node[] = [];
+  for (let depth = 0; depth <= maxDepth; depth++) {
+    const layerNodes = layers.get(depth) || [];
+    layerNodes.forEach((n, i) => {
+      positionedRegular.push({
+        ...n,
+        meta: { ...n.meta, x: START_X + (depth + 1) * NODE_SPACING_X, y: START_Y + i * NODE_SPACING_Y }
+      });
+    });
+  }
+
+  // Position output nodes (rightmost layer)
+  const outputX = START_X + (maxDepth + 2) * NODE_SPACING_X;
+  const positionedOutputs = outputNodes.map((n, i) => ({
+    ...n,
+    meta: { ...n.meta, x: outputX, y: START_Y + i * NODE_SPACING_Y }
+  }));
+
+  return [...positionedInputs, ...positionedProps, ...positionedRegular, ...positionedOutputs];
+}
+
 function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditorState {
   switch (action.type) {
     case 'SET_GRAPH':
@@ -591,6 +680,11 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       ];
       const subnetProps = existingProps.map(n => ({ name: n.name.replace('@prop/', ''), type: 'any' }));
 
+      // Collect all nodes for the subnet and apply autolayout
+      const allSubnetNodes = [...selectedNodes, ...newInputNodes, ...newOutputNodes];
+      const allSubnetEdges = [...internalEdges, ...newInternalEdges];
+      const layoutedNodes = autoLayoutNodes(allSubnetNodes, allSubnetEdges);
+
       // Create the subnet node
       const subnetNode: Node = {
         name: subnetName,
@@ -600,8 +694,8 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
         inputs: subnetInputs,
         outputs: subnetOutputs,
         props: subnetProps.map(p => ({ name: p.name, type: p.type, value: undefined as unknown })),
-        nodes: [...selectedNodes, ...newInputNodes, ...newOutputNodes],
-        edges: [...internalEdges, ...newInternalEdges]
+        nodes: layoutedNodes,
+        edges: allSubnetEdges
       };
 
       // Remove selected nodes and their edges from current scope, add subnet node
