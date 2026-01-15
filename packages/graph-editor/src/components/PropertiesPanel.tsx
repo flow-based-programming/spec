@@ -22,6 +22,7 @@ export function PropertiesPanel({ evaluationResult: externalResult, onRefreshEva
   const { nodes: scopedNodes, edges: scopedEdges } = useScopedGraph();
   const [internalResult, setInternalResult] = useState<unknown>(undefined);
   const [isEvaluating, setIsEvaluating] = useState(false);
+  const [isSpinning, setIsSpinning] = useState(false);
   
   // Hooks for editable node names - must be called unconditionally
   const [isEditingName, setIsEditingName] = useState(false);
@@ -120,11 +121,25 @@ export function PropertiesPanel({ evaluationResult: externalResult, onRefreshEva
   }, [selectedNodeId, isOutputNode, evaluateFn, definitions]);
   
   // Handle refresh - use internal evaluation if available, otherwise external
+  // Always spin for a minimum duration so user gets visual feedback even on fast evaluations
   const handleRefresh = useCallback(() => {
+    setIsSpinning(true);
+    const minSpinTime = 400; // minimum spin duration in ms
+    const spinStart = Date.now();
+
+    const stopSpinning = () => {
+      const elapsed = Date.now() - spinStart;
+      const remaining = Math.max(0, minSpinTime - elapsed);
+      setTimeout(() => setIsSpinning(false), remaining);
+    };
+
     if (evaluateFn && definitions) {
-      handleEvaluate();
+      handleEvaluate().finally(stopSpinning);
     } else if (onRefreshEvaluation) {
       onRefreshEvaluation();
+      stopSpinning();
+    } else {
+      stopSpinning();
     }
   }, [evaluateFn, definitions, handleEvaluate, onRefreshEvaluation]);
   
@@ -223,48 +238,32 @@ export function PropertiesPanel({ evaluationResult: externalResult, onRefreshEva
               <span className="text-xs text-slate-500 uppercase tracking-wider">Evaluated Result</span>
               <button
                 onClick={handleRefresh}
-                disabled={isEvaluating}
+                disabled={isSpinning}
                 className={clsx(
                   "p-1.5 rounded transition-colors",
-                  isEvaluating 
-                    ? "text-blue-400" 
+                  isSpinning
+                    ? "text-blue-400"
                     : "hover:bg-slate-700 text-slate-400 hover:text-slate-200"
                 )}
                 title="Re-evaluate graph"
               >
-                {isEvaluating ? (
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    width="14" 
-                    height="14" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                    className="animate-spin"
-                  >
-                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                  </svg>
-                ) : (
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    width="14" 
-                    height="14" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  >
-                    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                    <path d="M3 3v5h5" />
-                    <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
-                    <path d="M16 21h5v-5" />
-                  </svg>
-                )}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={isSpinning ? "animate-spin" : ""}
+                >
+                  <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                  <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                  <path d="M16 21h5v-5" />
+                </svg>
               </button>
             </div>
             {isEvaluating ? (
