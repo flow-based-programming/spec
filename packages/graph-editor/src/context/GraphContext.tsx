@@ -16,11 +16,17 @@ export interface SelectionState {
   edgeIds: Set<string>;
 }
 
+export interface ClipboardState {
+  nodes: Node[];
+  edges: Edge[];
+}
+
 export interface GraphEditorState {
   graph: Graph;
   definitions: Map<string, NodeDefinition>;
   view: ViewState;
   selection: SelectionState;
+  clipboard: ClipboardState;
   navigationStack: string[];
   currentScope: string | null;
   connecting: {
@@ -54,6 +60,8 @@ type GraphAction =
   | { type: 'CLEAR_SELECTION' }
   | { type: 'SELECT_ALL' }
   | { type: 'DUPLICATE_SELECTION' }
+  | { type: 'COPY_SELECTION' }
+  | { type: 'PASTE_SELECTION' }
   | { type: 'COLLAPSE_SELECTION' }
   | { type: 'MOVE_NODES'; nodeIds: string[]; delta: Point }
   | { type: 'SET_VIEW'; view: Partial<ViewState> }
@@ -314,9 +322,51 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       };
     }
 
+    case 'COPY_SELECTION': {
+      const selectedNodes = state.graph.nodes.filter(n => state.selection.nodeIds.has(n.name));
+      const selectedEdges = state.graph.edges.filter(
+        e => state.selection.nodeIds.has(e.src.node) && state.selection.nodeIds.has(e.dst.node)
+      );
+      return {
+        ...state,
+        clipboard: {
+          nodes: selectedNodes.map(n => ({ ...n })),
+          edges: selectedEdges.map(e => ({ ...e }))
+        }
+      };
+    }
+
+    case 'PASTE_SELECTION': {
+      if (state.clipboard.nodes.length === 0) return state;
+      
+      const nameMap = new Map<string, string>();
+      const pastedNodes = state.clipboard.nodes.map(n => {
+        const newName = `${n.name}_copy_${Date.now().toString(36)}`;
+        nameMap.set(n.name, newName);
+        return {
+          ...n,
+          name: newName,
+          meta: n.meta ? { ...n.meta, x: (n.meta.x || 0) + 50, y: (n.meta.y || 0) + 50 } : { x: 50, y: 50 }
+        };
+      });
+      const pastedEdges = state.clipboard.edges.map(e => ({
+        src: { node: nameMap.get(e.src.node) || e.src.node, port: e.src.port },
+        dst: { node: nameMap.get(e.dst.node) || e.dst.node, port: e.dst.port }
+      }));
+      return {
+        ...state,
+        graph: {
+          ...state.graph,
+          nodes: [...state.graph.nodes, ...pastedNodes],
+          edges: [...state.graph.edges, ...pastedEdges]
+        },
+        selection: { nodeIds: new Set(pastedNodes.map(n => n.name)), edgeIds: new Set() }
+      };
+    }
+
     case 'COLLAPSE_SELECTION': {
       const selectedNodeIds = state.selection.nodeIds;
-      if (selectedNodeIds.size < 2) return state;
+      if (selectedNodeIds.size < 1) return state;
 
       const selectedNodes = state.graph.nodes.filter(n => selectedNodeIds.has(n.name));
       
@@ -621,6 +671,7 @@ const initialState: GraphEditorState = {
   definitions: new Map(),
   view: { pan: { x: 0, y: 0 }, zoom: 1 },
   selection: { nodeIds: new Set(), edgeIds: new Set() },
+  clipboard: { nodes: [], edges: [] },
   navigationStack: [],
   currentScope: null,
   connecting: { active: false, sourceNode: null, sourcePort: null, isOutput: false },
@@ -693,6 +744,8 @@ export function useSelection() {
     clearSelection: () => dispatch({ type: 'CLEAR_SELECTION' }),
     selectAll: () => dispatch({ type: 'SELECT_ALL' }),
     duplicateSelection: () => dispatch({ type: 'DUPLICATE_SELECTION' }),
+    copySelection: () => dispatch({ type: 'COPY_SELECTION' }),
+    pasteSelection: () => dispatch({ type: 'PASTE_SELECTION' }),
     collapseSelection: () => dispatch({ type: 'COLLAPSE_SELECTION' }),
     deleteSelection: () => {
       dispatch({ type: 'DELETE_NODES', nodeIds: Array.from(state.selection.nodeIds) });

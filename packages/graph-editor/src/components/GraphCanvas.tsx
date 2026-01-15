@@ -10,7 +10,7 @@ const GRID_SIZE = 20;
 
 export function GraphCanvas() {
   const { state, dispatch } = useGraph();
-  const { clearSelection, deleteSelection, duplicateSelection, selectAll, collapseSelection } = useSelection();
+  const { clearSelection, deleteSelection, duplicateSelection, copySelection, pasteSelection, selectAll, collapseSelection } = useSelection();
   const { goUp, canGoUp, diveInto } = useNavigation();
   
   const svgRef = useRef<SVGSVGElement>(null);
@@ -243,13 +243,23 @@ export function GraphCanvas() {
         break;
       case 'c':
       case 'C':
-        if (e.shiftKey && state.selection.nodeIds.size >= 2) {
+        if (e.shiftKey && state.selection.nodeIds.size >= 1) {
           e.preventDefault();
           collapseSelection();
+        } else if ((e.metaKey || e.ctrlKey) && state.selection.nodeIds.size >= 1) {
+          e.preventDefault();
+          copySelection();
+        }
+        break;
+      case 'v':
+      case 'V':
+        if (e.metaKey || e.ctrlKey) {
+          e.preventDefault();
+          pasteSelection();
         }
         break;
     }
-  }, [deleteSelection, duplicateSelection, selectAll, clearSelection, canGoUp, goUp, diveInto, collapseSelection, state.selection.nodeIds, state.graph.nodes, state.connecting.active, dispatch]);
+  }, [deleteSelection, duplicateSelection, copySelection, pasteSelection, selectAll, clearSelection, canGoUp, goUp, diveInto, collapseSelection, state.selection.nodeIds, state.graph.nodes, state.connecting.active, dispatch]);
 
   const handleKeyUp = useCallback((e: KeyboardEvent) => {
     if (e.code === 'Space') {
