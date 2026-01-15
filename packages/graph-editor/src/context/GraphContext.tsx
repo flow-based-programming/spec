@@ -1,5 +1,23 @@
 import React, { createContext, useContext, useReducer, useCallback, ReactNode } from 'react';
 import type { Graph, Node, Edge, NodeDefinition, Prop, Port } from '@fbp/types';
+import {
+  cwdToPath,
+  isRootCwd,
+  getParentCwd,
+  getChildCwd,
+  getNodesAtScope,
+  getEdgesAtScope,
+  updateNodesAtScope,
+  updateEdgesAtScope,
+  getEdgeId,
+  ensureDerivedPorts,
+  migrateLegacyGraph,
+  deriveBoundaryPorts,
+} from '../utils/graphTransform';
+import { BOUNDARY_PREFIXES } from '../types';
+
+// Re-export getEdgeId for backward compatibility
+export { getEdgeId } from '../utils/graphTransform';
 
 // Node dimension constants (must match GraphNode.tsx)
 const NODE_WIDTH = 180;
@@ -115,110 +133,9 @@ type GraphAction =
   | { type: 'END_BOX_SELECT' }
   | { type: 'RENAME_NODE'; oldName: string; newName: string };
 
+// generateId is kept locally as it's a simple utility
 function generateId(): string {
   return `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
-
-function getEdgeId(edge: Edge): string {
-  return `${edge.src.node}:${edge.src.port}->${edge.dst.node}:${edge.dst.port}`;
-}
-
-// Convert cwd to path segments: "/" -> [], "/subnet1" -> ["subnet1"], "/subnet1/subnet2" -> ["subnet1", "subnet2"]
-function cwdToPath(cwd: string): string[] {
-  return cwd.split('/').filter(Boolean);
-}
-
-// Check if cwd is at root level
-function isRootCwd(cwd: string): boolean {
-  return cwd === '/';
-}
-
-function getNodesInScope(graph: Graph, cwd: string): Node[] {
-  if (isRootCwd(cwd)) return graph.nodes;
-  
-  const findNode = (nodes: Node[], path: string[]): Node | null => {
-    if (path.length === 0) return null;
-    const node = nodes.find(n => n.name === path[0]);
-    if (!node) return null;
-    if (path.length === 1) return node;
-    return findNode(node.nodes || [], path.slice(1));
-  };
-  
-  const scopePath = cwdToPath(cwd);
-  const scopeNode = findNode(graph.nodes, scopePath);
-  return scopeNode?.nodes || [];
-}
-
-function getEdgesInScope(graph: Graph, cwd: string): Edge[] {
-  if (isRootCwd(cwd)) return graph.edges;
-  
-  const findNode = (nodes: Node[], path: string[]): Node | null => {
-    if (path.length === 0) return null;
-    const node = nodes.find(n => n.name === path[0]);
-    if (!node) return null;
-    if (path.length === 1) return node;
-    return findNode(node.nodes || [], path.slice(1));
-  };
-  
-  const scopePath = cwdToPath(cwd);
-  const scopeNode = findNode(graph.nodes, scopePath);
-  return scopeNode?.edges || [];
-}
-
-// Helper to find a node at a given scope path
-function findNodeAtPath(nodes: Node[], path: string[]): Node | null {
-  if (path.length === 0) return null;
-  const node = nodes.find(n => n.name === path[0]);
-  if (!node) return null;
-  if (path.length === 1) return node;
-  return findNodeAtPath(node.nodes || [], path.slice(1));
-}
-
-// Helper to update nodes at a given cwd
-function updateNodesAtScope(graph: Graph, cwd: string, updater: (nodes: Node[]) => Node[]): Graph {
-  if (isRootCwd(cwd)) {
-    return { ...graph, nodes: updater(graph.nodes) };
-  }
-  
-  const scopePath = cwdToPath(cwd);
-  
-  const updateRecursive = (nodes: Node[], path: string[]): Node[] => {
-    if (path.length === 0) return updater(nodes);
-    return nodes.map(n => {
-      if (n.name !== path[0]) return n;
-      return {
-        ...n,
-        nodes: updateRecursive(n.nodes || [], path.slice(1))
-      };
-    });
-  };
-  
-  return { ...graph, nodes: updateRecursive(graph.nodes, scopePath) };
-}
-
-// Helper to update edges at a given cwd
-function updateEdgesAtScope(graph: Graph, cwd: string, updater: (edges: Edge[]) => Edge[]): Graph {
-  if (isRootCwd(cwd)) {
-    return { ...graph, edges: updater(graph.edges) };
-  }
-  
-  const scopePath = cwdToPath(cwd);
-  
-  const updateRecursive = (nodes: Node[], path: string[]): Node[] => {
-    if (path.length === 0) return nodes;
-    return nodes.map(n => {
-      if (n.name !== path[0]) return n;
-      if (path.length === 1) {
-        return { ...n, edges: updater(n.edges || []) };
-      }
-      return {
-        ...n,
-        nodes: updateRecursive(n.nodes || [], path.slice(1))
-      };
-    });
-  };
-  
-  return { ...graph, nodes: updateRecursive(graph.nodes, scopePath) };
 }
 
 // Auto-layout nodes in a layered/hierarchical arrangement
@@ -312,15 +229,18 @@ function autoLayoutNodes(nodes: Node[], edges: Edge[]): Node[] {
 
 function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditorState {
   switch (action.type) {
-    case 'SET_GRAPH':
+    case 'SET_GRAPH': {
+      // Migrate legacy graphs and ensure derived ports
+      const migratedGraph = migrateLegacyGraph(action.graph);
       return {
         ...state,
-        graph: action.graph,
+        graph: migratedGraph,
         definitions: new Map([
           ...state.definitions,
-          ...(action.graph.definitions || []).map(d => [d.type, d] as [string, NodeDefinition])
+          ...(migratedGraph.definitions || []).map(d => [d.type, d] as [string, NodeDefinition])
         ])
       };
+    }
 
     case 'SET_DEFINITIONS': {
       const newDefs = new Map(state.definitions);
@@ -335,13 +255,13 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
 
     case 'ADD_BOUNDARY_NODE': {
       const { boundaryType, position } = action;
-      const prefix = boundaryType === 'input' ? '@in/' : boundaryType === 'output' ? '@out/' : '@prop/';
+      const prefix = BOUNDARY_PREFIXES[boundaryType];
       const baseName = boundaryType;
       const nodeType = `core/graph/${boundaryType}`;
       const kind = boundaryType === 'input' ? 'graphInput' : boundaryType === 'output' ? 'graphOutput' : 'graphProp';
       
       // Count existing boundary nodes of this type to generate next number (scope-aware)
-      const scopedNodes = getNodesInScope(state.graph, state.cwd);
+      const scopedNodes = getNodesAtScope(state.graph, state.cwd);
       const existingNodes = scopedNodes.filter(n => n.name.startsWith(prefix + baseName));
       const existingNumbers = existingNodes.map(n => {
         const match = n.name.match(new RegExp(`^${prefix}${baseName}(\\d+)$`));
@@ -358,30 +278,12 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
         meta: { x: position.x, y: position.y }
       };
       
-      // Add node at current scope - ports are derived from boundary nodes automatically
-      // (GraphNode.deriveBoundaryPorts computes inputs/outputs from @in/@out nodes)
-      const newGraph = updateNodesAtScope(state.graph, state.cwd, nodes => [...nodes, newNode]);
+      // Add node at current scope
+      let newGraph = updateNodesAtScope(state.graph, state.cwd, nodes => [...nodes, newNode]);
       
-      // For root level, also update graph.inputs/outputs/props for serialization
-      if (isRootCwd(state.cwd)) {
-        const newPort = { name: portName, type: 'any' };
-        let inputs = state.graph.inputs || [];
-        let outputs = state.graph.outputs || [];
-        let props = state.graph.props || [];
-        
-        if (boundaryType === 'input') {
-          inputs = [...inputs, newPort];
-        } else if (boundaryType === 'output') {
-          outputs = [...outputs, newPort];
-        } else {
-          props = [...props, { name: portName, type: 'any', default: undefined }];
-        }
-        
-        return {
-          ...state,
-          graph: { ...newGraph, inputs, outputs, props }
-        };
-      }
+      // Derive ports from boundary nodes (single source of truth)
+      // This replaces the old dual-sync logic - ports are now always derived
+      newGraph = ensureDerivedPorts(newGraph);
       
       return { ...state, graph: newGraph };
     }
@@ -395,7 +297,6 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
 
     case 'DELETE_NODES': {
       const nodeIdSet = new Set(action.nodeIds);
-      const scopedNodes = getNodesInScope(state.graph, state.cwd);
       
       // Delete nodes at current scope
       let newGraph = updateNodesAtScope(state.graph, state.cwd, 
@@ -407,34 +308,9 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
         edges => edges.filter(e => !nodeIdSet.has(e.src.node) && !nodeIdSet.has(e.dst.node))
       );
       
-      // Get deleted boundary nodes info
-      const deletedNodes = scopedNodes.filter(n => nodeIdSet.has(n.name));
-      const deletedInputNames = new Set(
-        deletedNodes
-          .filter(n => n.name.startsWith('@in/'))
-          .map(n => n.name.replace('@in/', ''))
-      );
-      const deletedOutputNames = new Set(
-        deletedNodes
-          .filter(n => n.name.startsWith('@out/'))
-          .map(n => n.name.replace('@out/', ''))
-      );
-      const deletedPropNames = new Set(
-        deletedNodes
-          .filter(n => n.name.startsWith('@prop/'))
-          .map(n => n.name.replace('@prop/', ''))
-      );
-      
-      // For root level, update graph.inputs/outputs/props for serialization
-      // For nested subnets, ports are derived from boundary nodes automatically
-      // (GraphNode.deriveBoundaryPorts computes inputs/outputs from @in/@out nodes)
-      if (isRootCwd(state.cwd)) {
-        const inputs = (state.graph.inputs || []).filter(p => !deletedInputNames.has(p.name));
-        const outputs = (state.graph.outputs || []).filter(p => !deletedOutputNames.has(p.name));
-        const props = (state.graph.props || []).filter(p => !deletedPropNames.has(p.name));
-        
-        newGraph = { ...newGraph, inputs, outputs, props };
-      }
+      // Derive ports from remaining boundary nodes (single source of truth)
+      // This replaces the old dual-sync logic - ports are now always derived
+      newGraph = ensureDerivedPorts(newGraph);
       
       return {
         ...state,
@@ -498,8 +374,8 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       return { ...state, selection: { nodeIds: new Set(), edgeIds: new Set() } };
 
     case 'SELECT_ALL': {
-      const nodes = getNodesInScope(state.graph, state.cwd);
-      const edges = getEdgesInScope(state.graph, state.cwd);
+      const nodes = getNodesAtScope(state.graph, state.cwd);
+      const edges = getEdgesAtScope(state.graph, state.cwd);
       return {
         ...state,
         selection: {
@@ -510,8 +386,8 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
     }
 
     case 'DUPLICATE_SELECTION': {
-      const scopedNodes = getNodesInScope(state.graph, state.cwd);
-      const scopedEdges = getEdgesInScope(state.graph, state.cwd);
+      const scopedNodes = getNodesAtScope(state.graph, state.cwd);
+      const scopedEdges = getEdgesAtScope(state.graph, state.cwd);
       const selectedNodes = scopedNodes.filter(n => state.selection.nodeIds.has(n.name));
       const nameMap = new Map<string, string>();
       const duplicatedNodes = selectedNodes.map(n => {
@@ -541,8 +417,8 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
     }
 
     case 'COPY_SELECTION': {
-      const scopedNodes = getNodesInScope(state.graph, state.cwd);
-      const scopedEdges = getEdgesInScope(state.graph, state.cwd);
+      const scopedNodes = getNodesAtScope(state.graph, state.cwd);
+      const scopedEdges = getEdgesAtScope(state.graph, state.cwd);
       const selectedNodes = scopedNodes.filter(n => state.selection.nodeIds.has(n.name));
       const selectedEdges = scopedEdges.filter(
         e => state.selection.nodeIds.has(e.src.node) && state.selection.nodeIds.has(e.dst.node)
@@ -588,8 +464,8 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       const selectedNodeIds = state.selection.nodeIds;
       if (selectedNodeIds.size < 1) return state;
 
-      const scopedNodes = getNodesInScope(state.graph, state.cwd);
-      const scopedEdges = getEdgesInScope(state.graph, state.cwd);
+      const scopedNodes = getNodesAtScope(state.graph, state.cwd);
+      const scopedEdges = getEdgesAtScope(state.graph, state.cwd);
       const selectedNodes = scopedNodes.filter(n => selectedNodeIds.has(n.name));
       
       // Calculate center position for the subnet node
@@ -755,8 +631,8 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       const selectedNodeIds = state.selection.nodeIds;
       if (selectedNodeIds.size < 1) return state;
 
-      const scopedNodes = getNodesInScope(state.graph, state.cwd);
-      const scopedEdges = getEdgesInScope(state.graph, state.cwd);
+      const scopedNodes = getNodesAtScope(state.graph, state.cwd);
+      const scopedEdges = getEdgesAtScope(state.graph, state.cwd);
       const selectedNodes = scopedNodes.filter(n => selectedNodeIds.has(n.name));
       
       // Get edges that connect selected nodes (for layout algorithm)
@@ -807,7 +683,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       return { ...state, view: { ...state.view, ...action.view } };
 
     case 'DIVE_INTO': {
-      const scopedNodes = getNodesInScope(state.graph, state.cwd);
+      const scopedNodes = getNodesAtScope(state.graph, state.cwd);
       const node = scopedNodes.find(n => n.name === action.nodeId);
       if (!node || !node.nodes) return state;
       
@@ -910,7 +786,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
         maxY: Math.max(start.y, end.y)
       };
 
-      const scopedNodes = getNodesInScope(state.graph, state.cwd);
+      const scopedNodes = getNodesAtScope(state.graph, state.cwd);
       const previewNodeIds = new Set(
         scopedNodes
           .filter(n => {
@@ -951,7 +827,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
         maxY: Math.max(newStart.y, newEnd.y)
       };
 
-      const scopedNodes = getNodesInScope(state.graph, state.cwd);
+      const scopedNodes = getNodesAtScope(state.graph, state.cwd);
       const previewNodeIds = new Set(
         scopedNodes
           .filter(n => {
@@ -993,7 +869,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       if (oldName === newName) return state;
       
       // Check if new name already exists in current scope
-      const scopedNodes = getNodesInScope(state.graph, state.cwd);
+      const scopedNodes = getNodesAtScope(state.graph, state.cwd);
       if (scopedNodes.some(n => n.name === newName)) {
         console.warn(`Node with name "${newName}" already exists`);
         return state;
@@ -1013,34 +889,9 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
         }))
       );
       
-      // For boundary nodes at root level, update graph.inputs/outputs/props
-      if (isRootCwd(state.cwd)) {
-        const oldPortName = oldName.replace(/^@(in|out|prop)\//, '');
-        const newPortName = newName.replace(/^@(in|out|prop)\//, '');
-        
-        if (oldName.startsWith('@in/')) {
-          newGraph = {
-            ...newGraph,
-            inputs: (newGraph.inputs || []).map(p => 
-              p.name === oldPortName ? { ...p, name: newPortName } : p
-            )
-          };
-        } else if (oldName.startsWith('@out/')) {
-          newGraph = {
-            ...newGraph,
-            outputs: (newGraph.outputs || []).map(p => 
-              p.name === oldPortName ? { ...p, name: newPortName } : p
-            )
-          };
-        } else if (oldName.startsWith('@prop/')) {
-          newGraph = {
-            ...newGraph,
-            props: (newGraph.props || []).map(p => 
-              p.name === oldPortName ? { ...p, name: newPortName } : p
-            )
-          };
-        }
-      }
+      // Derive ports from boundary nodes (single source of truth)
+      // This replaces the old dual-sync logic - ports are now always derived
+      newGraph = ensureDerivedPorts(newGraph);
       
       // Update selection if the renamed node was selected
       const newSelection = state.selection.nodeIds.has(oldName)
@@ -1086,11 +937,14 @@ export function GraphProvider({ children, initialGraph, externalDefinitions, onS
   externalDefinitions?: NodeDefinition[];
   onSelectionChange?: (selectedNodeIds: string[]) => void;
 }) {
+  // Migrate legacy graphs on initialization to ensure boundary nodes are the source of truth
+  const migratedInitialGraph = initialGraph ? migrateLegacyGraph(initialGraph) : initialState.graph;
+  
   const [state, dispatch] = useReducer(graphReducer, {
     ...initialState,
-    graph: initialGraph || initialState.graph,
+    graph: migratedInitialGraph,
     definitions: new Map([
-      ...(initialGraph?.definitions || []).map(d => [d.type, d] as [string, NodeDefinition]),
+      ...(migratedInitialGraph.definitions || []).map(d => [d.type, d] as [string, NodeDefinition]),
       ...(externalDefinitions || []).map(d => [d.type, d] as [string, NodeDefinition])
     ])
   });
@@ -1163,7 +1017,7 @@ export function useNavigation() {
 
 export function useScopedGraph() {
   const { state } = useGraph();
-  const nodes = getNodesInScope(state.graph, state.cwd);
-  const edges = getEdgesInScope(state.graph, state.cwd);
+  const nodes = getNodesAtScope(state.graph, state.cwd);
+  const edges = getEdgesAtScope(state.graph, state.cwd);
   return { nodes, edges };
 }

@@ -1,0 +1,39 @@
+{
+  "name": "@fbp/spec",
+  "version": "0.1.0",
+  "author": "Dan Lynch <pyramation@gmail.com>",
+  "description": "Storage specification and API for flow-based programming graphs",
+  "main": "index.js",
+  "module": "esm/index.js",
+  "types": "index.d.ts",
+  "homepage": "https://github.com/constructive-io/fbp",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "directory": "dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/constructive-io/fbp"
+  },
+  "bugs": {
+    "url": "https://github.com/constructive-io/fbp/issues"
+  },
+  "scripts": {
+    "codegen": "ts-node ./scripts/codegen.ts",
+    "clean": "makage clean",
+    "prepack": "npm run build",
+    "build": "makage build",
+    "build:dev": "makage build --dev",
+    "lint": "eslint . --fix",
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch"
+  },
+  "keywords": ["fbp", "flow-based-programming", "graph", "spec"],
+  "dependencies": {
+    "schema-typescript": "^0.11.0"
+  },
+  "devDependencies": {
+    "makage": "0.1.9"
+  }
+}

@@ -1,0 +1,194 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GraphSpec",
+  "description": "Storage schema for flow-based programming graphs. Boundary nodes (@in/, @out/, @prop/) ARE the interface definition - no separate inputs/outputs/props arrays needed. This is the minimal canonical format for persistence.",
+  "$ref": "#/definitions/Graph",
+  "definitions": {
+    "NodeMeta": {
+      "type": "object",
+      "description": "Position and optional metadata for visual layout.",
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+
+    "PortRef": {
+      "type": "object",
+      "description": "Reference to a port on a node within the same scope.",
+      "properties": {
+        "node": { "type": "string", "minLength": 1 },
+        "port": { "type": "string", "minLength": 1 }
+      },
+      "required": ["node", "port"],
+      "additionalProperties": false
+    },
+
+    "Edge": {
+      "type": "object",
+      "description": "A connection between two ports within the same scope.",
+      "properties": {
+        "src": { "$ref": "#/definitions/PortRef" },
+        "dst": { "$ref": "#/definitions/PortRef" },
+        "channel": {
+          "type": "string",
+          "description": "Optional channel namespace (default: 'main')."
+        }
+      },
+      "required": ["src", "dst"],
+      "additionalProperties": false
+    },
+
+    "PropValue": {
+      "type": "object",
+      "description": "A property value on a node instance.",
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "value": {
+          "description": "The property value (any JSON value)."
+        },
+        "ref": {
+          "type": "boolean",
+          "description": "If true, value is a reference path (e.g., '@prop/myProp')."
+        }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+
+    "Node": {
+      "type": "object",
+      "description": "A node in the graph. For subnets, the interface is defined by boundary nodes (@in/, @out/, @prop/) inside - NO separate inputs/outputs/props arrays.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique name within the parent scope."
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Node type (references a NodeDefinition)."
+        },
+        "meta": { "$ref": "#/definitions/NodeMeta" },
+        "props": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/PropValue" },
+          "description": "Property values for this instance."
+        },
+        "nodes": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Node" },
+          "description": "Child nodes (makes this a subnet)."
+        },
+        "edges": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Edge" },
+          "description": "Edges within this scope."
+        }
+      },
+      "required": ["name", "type"],
+      "additionalProperties": false
+    },
+
+    "Graph": {
+      "type": "object",
+      "description": "Top-level graph container. Interface is defined by boundary nodes (@in/, @out/, @prop/) at root level - NO separate inputs/outputs/props arrays.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Optional graph name."
+        },
+        "nodes": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Node" },
+          "description": "Root-level nodes."
+        },
+        "edges": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Edge" },
+          "description": "Root-level edges."
+        },
+        "definitions": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/NodeDefinition" },
+          "description": "Inline node definitions (optional)."
+        },
+        "meta": { "$ref": "#/definitions/NodeMeta" }
+      },
+      "required": ["nodes", "edges"],
+      "additionalProperties": false
+    },
+
+    "PortDef": {
+      "type": "object",
+      "description": "A port definition on a node type.",
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "description": "Data type (e.g., 'string', 'number', 'any')." },
+        "multi": { "type": "boolean", "description": "If true, accepts multiple connections." },
+        "description": { "type": "string" }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+
+    "PropDef": {
+      "type": "object",
+      "description": "A property definition on a node type.",
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "type": { "type": "string" },
+        "default": { "description": "Default value." },
+        "description": { "type": "string" }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+
+    "NodeDefinition": {
+      "type": "object",
+      "description": "Definition of a node type (like a class).",
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique type identifier (e.g., 'math/add')."
+        },
+        "context": {
+          "type": "string",
+          "description": "Namespace (e.g., 'math', 'ui')."
+        },
+        "category": {
+          "type": "string",
+          "description": "Category for palette organization."
+        },
+        "inputs": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/PortDef" }
+        },
+        "outputs": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/PortDef" }
+        },
+        "props": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/PropDef" }
+        },
+        "icon": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    }
+  },
+
+  "x-spec-rules": [
+    "Boundary nodes ARE the interface: @in/name, @out/name, @prop/name nodes define the subnet's ports. No separate inputs/outputs/props arrays.",
+    "Edges are per-scope: Each node with children stores its own edges array.",
+    "Paths: Node identity is path-based (e.g., '/subnet1/nested/myNode'). Root is '/'.",
+    "Minimal storage: Only store what's needed to reconstruct the graph. Derived data is computed at runtime."
+  ]
+}
