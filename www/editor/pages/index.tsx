@@ -206,7 +206,7 @@ const uiDefinitions: NodeDefinitionWithImpl[] = [
 const examples: Record<string, Graph> = {
   'Simple Add (5 + 3 = 8)': {
     name: 'simple-add',
-    definitions: mathDefinitions,
+    definitions: allDefinitions,
     nodes: [
       { name: 'num1', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 5 }], meta: { x: 100, y: 100 } },
       { name: 'num2', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 3 }], meta: { x: 100, y: 250 } },
@@ -221,7 +221,7 @@ const examples: Record<string, Graph> = {
   },
   'Chained Math ((2 + 3) * 4 = 20)': {
     name: 'chained-math',
-    definitions: mathDefinitions,
+    definitions: allDefinitions,
     nodes: [
       { name: 'num1', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 2 }], meta: { x: 100, y: 100 } },
       { name: 'num2', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 3 }], meta: { x: 100, y: 250 } },
@@ -240,7 +240,7 @@ const examples: Record<string, Graph> = {
   },
   'Simple Page': {
     name: 'simple-page',
-    definitions: uiDefinitions,
+    definitions: allDefinitions,
     nodes: [
       { 
         name: 'page', 
@@ -259,7 +259,7 @@ const examples: Record<string, Graph> = {
   },
   'Form with Children': {
     name: 'form-with-children',
-    definitions: uiDefinitions,
+    definitions: allDefinitions,
     nodes: [
       { 
         name: 'form', 
@@ -301,7 +301,7 @@ const examples: Record<string, Graph> = {
   },
   'Newsletter Page': {
     name: 'newsletter-page',
-    definitions: uiDefinitions,
+    definitions: allDefinitions,
     nodes: [
       { 
         name: 'page', 
@@ -353,7 +353,7 @@ const examples: Record<string, Graph> = {
   },
   'Subgraph Example (Math in Subnet)': {
     name: 'subgraph-math',
-    definitions: mathDefinitions,
+    definitions: allDefinitions,
     nodes: [
       { name: 'input1', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 10 }], meta: { x: 100, y: 150 } },
       { name: 'input2', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 5 }], meta: { x: 100, y: 350 } },
