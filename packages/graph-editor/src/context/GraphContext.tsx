@@ -764,3 +764,10 @@ export function useNavigation() {
     canGoUp: state.navigationStack.length > 0
   };
 }
+
+export function useScopedGraph() {
+  const { state } = useGraph();
+  const nodes = getNodesInScope(state.graph, state.currentScope);
+  const edges = getEdgesInScope(state.graph, state.currentScope);
+  return { nodes, edges };
+}

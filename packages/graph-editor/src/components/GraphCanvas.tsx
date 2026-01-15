@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react';
-import { useGraph, useSelection, useNavigation, Point } from '../context/GraphContext';
+import { useGraph, useSelection, useNavigation, useScopedGraph, Point } from '../context/GraphContext';
 import { GraphNode } from './GraphNode';
 import { GraphEdge, TempEdge } from './GraphEdge';
 import { screenToCanvas, clamp } from '../utils/geometry';
@@ -12,6 +12,7 @@ export function GraphCanvas() {
   const { state, dispatch } = useGraph();
   const { clearSelection, deleteSelection, duplicateSelection, copySelection, pasteSelection, selectAll, collapseSelection } = useSelection();
   const { goUp, canGoUp, diveInto } = useNavigation();
+  const { nodes: scopedNodes, edges: scopedEdges } = useScopedGraph();
   
   const svgRef = useRef<SVGSVGElement>(null);
   const bgRef = useRef<SVGRectElement>(null);
@@ -327,7 +328,7 @@ export function GraphCanvas() {
       <rect ref={bgRef} width="100%" height="100%" fill="url(#grid)" />
 
       <g transform={`translate(${state.view.pan.x}, ${state.view.pan.y}) scale(${state.view.zoom})`}>
-        {state.graph.edges.map((edge, i) => (
+        {scopedEdges.map((edge, i) => (
           <GraphEdge key={`${edge.src.node}:${edge.src.port}->${edge.dst.node}:${edge.dst.port}`} edge={edge} />
         ))}
 
@@ -335,7 +336,7 @@ export function GraphCanvas() {
           <TempEdge start={connectingStartPos} end={connectingEnd} />
         )}
 
-        {state.graph.nodes.map(node => (
+        {scopedNodes.map(node => (
           <GraphNode
             key={node.name}
             node={node}
