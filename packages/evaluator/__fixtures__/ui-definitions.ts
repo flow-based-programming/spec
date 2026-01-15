@@ -13,7 +13,7 @@ export const graphInputDef: NodeDefinitionWithImpl = {
   inputs: [],
   outputs: [{ name: 'value', type: 'any' }],
   props: [
-    { name: 'value', type: 'any' },
+    { name: 'valueType', type: 'enum', default: 'any', options: ['any', 'number', 'string', 'boolean', 'Element'] },
     { name: 'default', type: 'any' }
   ],
   description: 'Graph input boundary node',
