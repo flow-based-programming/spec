@@ -4,6 +4,22 @@ import { evaluate } from '@fbp/evaluator';
 import type { NodeDefinitionWithImpl } from '@fbp/evaluator';
 import type { Graph } from '@fbp/types';
 
+function coerceValue(value: any, valueType: string): any {
+  if (value === undefined || value === null) return value;
+  switch (valueType) {
+    case 'number':
+      return typeof value === 'number' ? value : parseFloat(String(value)) || 0;
+    case 'string':
+      return String(value);
+    case 'boolean':
+      return value === true || value === 'true' || value === 1;
+    case 'Element':
+    case 'any':
+    default:
+      return value;
+  }
+}
+
 const graphInputDef: NodeDefinitionWithImpl = {
   context: 'core',
   category: 'graph',
@@ -11,11 +27,11 @@ const graphInputDef: NodeDefinitionWithImpl = {
   inputs: [],
   outputs: [{ name: 'value', type: 'any' }],
   props: [
-    { name: 'value', type: 'any', description: 'Input value (set externally)' },
+    { name: 'valueType', type: 'enum', default: 'any', options: ['any', 'number', 'string', 'boolean', 'Element'], description: 'Type of the input value' },
     { name: 'default', type: 'any', description: 'Default value when not provided externally' }
   ],
   description: 'Graph input boundary node',
-  impl: (_inputs, props) => ({ value: props?.value ?? props?.default }),
+  impl: (_inputs, props) => ({ value: coerceValue(props?.value ?? props?.default, props?.valueType ?? 'any') }),
 };
 
 const graphOutputDef: NodeDefinitionWithImpl = {
@@ -24,9 +40,11 @@ const graphOutputDef: NodeDefinitionWithImpl = {
   type: 'core/graph/output',
   inputs: [{ name: 'value', type: 'any' }],
   outputs: [{ name: 'value', type: 'any' }],
-  props: [],
+  props: [
+    { name: 'valueType', type: 'enum', default: 'any', options: ['any', 'number', 'string', 'boolean', 'Element'], description: 'Type of the output value' }
+  ],
   description: 'Graph output boundary node',
-  impl: (inputs) => ({ value: inputs.value }),
+  impl: (inputs, props) => ({ value: coerceValue(inputs.value, props?.valueType ?? 'any') }),
 };
 
 const graphPropDef: NodeDefinitionWithImpl = {
@@ -36,11 +54,11 @@ const graphPropDef: NodeDefinitionWithImpl = {
   inputs: [],
   outputs: [{ name: 'value', type: 'any' }],
   props: [
-    { name: 'value', type: 'any', description: 'Property value' },
+    { name: 'valueType', type: 'enum', default: 'any', options: ['any', 'number', 'string', 'boolean', 'Element'], description: 'Type of the property value' },
     { name: 'default', type: 'any', description: 'Default value for the prop' }
   ],
   description: 'Graph property boundary node',
-  impl: (_inputs, props) => ({ value: props?.value ?? props?.default }),
+  impl: (_inputs, props) => ({ value: coerceValue(props?.value ?? props?.default, props?.valueType ?? 'any') }),
 };
 
 const mathDefinitions: NodeDefinitionWithImpl[] = [

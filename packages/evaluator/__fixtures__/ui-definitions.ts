@@ -5,6 +5,23 @@ import type { NodeDefinitionWithImpl } from '../src/types';
  * These produce vdom JSON structures.
  */
 
+// Type coercion helper for boundary nodes
+function coerceValue(value: any, valueType: string): any {
+  if (value === undefined || value === null) return value;
+  switch (valueType) {
+    case 'number':
+      return typeof value === 'number' ? value : parseFloat(String(value)) || 0;
+    case 'string':
+      return String(value);
+    case 'boolean':
+      return value === true || value === 'true' || value === 1;
+    case 'Element':
+    case 'any':
+    default:
+      return value;
+  }
+}
+
 // Boundary node definitions for graph inputs/outputs
 export const graphInputDef: NodeDefinitionWithImpl = {
   context: 'core',
@@ -17,7 +34,7 @@ export const graphInputDef: NodeDefinitionWithImpl = {
     { name: 'default', type: 'any' }
   ],
   description: 'Graph input boundary node',
-  impl: (_inputs, props) => ({ value: props?.value ?? props?.default })
+  impl: (_inputs, props) => ({ value: coerceValue(props?.value ?? props?.default, props?.valueType ?? 'any') })
 };
 
 export const graphOutputDef: NodeDefinitionWithImpl = {
@@ -26,9 +43,25 @@ export const graphOutputDef: NodeDefinitionWithImpl = {
   type: 'core/graph/output',
   inputs: [{ name: 'value', type: 'any' }],
   outputs: [{ name: 'value', type: 'any' }],
-  props: [],
+  props: [
+    { name: 'valueType', type: 'enum', default: 'any', options: ['any', 'number', 'string', 'boolean', 'Element'] }
+  ],
   description: 'Graph output boundary node',
-  impl: (inputs) => ({ value: inputs.value })
+  impl: (inputs, props) => ({ value: coerceValue(inputs.value, props?.valueType ?? 'any') })
+};
+
+export const graphPropDef: NodeDefinitionWithImpl = {
+  context: 'core',
+  category: 'graph',
+  type: 'core/graph/prop',
+  inputs: [],
+  outputs: [{ name: 'value', type: 'any' }],
+  props: [
+    { name: 'valueType', type: 'enum', default: 'any', options: ['any', 'number', 'string', 'boolean', 'Element'] },
+    { name: 'default', type: 'any' }
+  ],
+  description: 'Graph property boundary node',
+  impl: (_inputs, props) => ({ value: coerceValue(props?.value ?? props?.default, props?.valueType ?? 'any') })
 };
 
 export const pageDef: NodeDefinitionWithImpl = {
@@ -156,5 +189,6 @@ export const uiDefinitions: NodeDefinitionWithImpl[] = [
   buttonDef,
   textDef,
   graphInputDef,
-  graphOutputDef
+  graphOutputDef,
+  graphPropDef
 ];
