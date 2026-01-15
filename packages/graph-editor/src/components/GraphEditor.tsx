@@ -6,6 +6,9 @@ import { NodePalette } from './NodePalette';
 import { StatusBar } from './StatusBar';
 import type { Graph, NodeDefinition } from '@fbp/types';
 
+// Type for evaluate function
+type EvaluateFn = (graph: Graph, options: { definitions: any[]; outputNode: string; outputPort: string }) => Promise<any>;
+
 interface GraphEditorProps {
   graph?: Graph;
   definitions?: NodeDefinition[];
@@ -17,6 +20,7 @@ interface GraphEditorProps {
   onSelectionChange?: (selectedNodeIds: string[]) => void;
   evaluationResult?: unknown;
   onRefreshEvaluation?: () => void;
+  evaluateFn?: EvaluateFn;
 }
 
 export function GraphEditor({
@@ -28,7 +32,8 @@ export function GraphEditor({
   className = '',
   onSelectionChange,
   evaluationResult,
-  onRefreshEvaluation
+  onRefreshEvaluation,
+  evaluateFn
 }: GraphEditorProps) {
   return (
     <GraphProvider initialGraph={graph} externalDefinitions={definitions} onSelectionChange={onSelectionChange}>
@@ -51,7 +56,12 @@ export function GraphEditor({
           
           {showPropertiesPanel && (
             <div className="w-72 flex-shrink-0 border-l border-slate-700">
-              <PropertiesPanel evaluationResult={evaluationResult} onRefreshEvaluation={onRefreshEvaluation} />
+              <PropertiesPanel 
+                evaluationResult={evaluationResult} 
+                onRefreshEvaluation={onRefreshEvaluation}
+                evaluateFn={evaluateFn}
+                definitions={definitions as any[]}
+              />
             </div>
           )}
         </div>

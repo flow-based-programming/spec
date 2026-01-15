@@ -11,10 +11,11 @@ const graphInputDef: NodeDefinitionWithImpl = {
   inputs: [],
   outputs: [{ name: 'value', type: 'any' }],
   props: [
-    { name: 'value', type: 'any', description: 'Input value (set externally)' }
+    { name: 'value', type: 'any', description: 'Input value (set externally)' },
+    { name: 'default', type: 'any', description: 'Default value when not provided externally' }
   ],
   description: 'Graph input boundary node',
-  impl: (_inputs, props) => ({ value: props?.value }),
+  impl: (_inputs, props) => ({ value: props?.value ?? props?.default }),
 };
 
 const graphOutputDef: NodeDefinitionWithImpl = {
@@ -324,46 +325,7 @@ const exampleNames = Object.keys(examples);
 
 export default function Home() {
   const [selectedExample, setSelectedExample] = useState(exampleNames[0]);
-  const [evaluationResult, setEvaluationResult] = useState<unknown>(undefined);
-  const [selectedOutputNode, setSelectedOutputNode] = useState<string | null>(null);
   const graph = examples[selectedExample];
-
-  const evaluateGraph = async (nodeId: string) => {
-    try {
-      const result = await evaluate(graph as Graph, {
-        definitions: graph.definitions as NodeDefinitionWithImpl[],
-        outputNode: nodeId,
-        outputPort: 'value'
-      });
-      setEvaluationResult(result);
-    } catch (e) {
-      console.error('Evaluation error:', e);
-      setEvaluationResult(undefined);
-    }
-  };
-
-  const handleSelectionChange = (selectedNodeIds: string[]) => {
-    if (selectedNodeIds.length === 1) {
-      const nodeId = selectedNodeIds[0];
-      const node = graph.nodes.find(n => n.name === nodeId);
-      if (node && node.type === 'core/graph/output') {
-        setSelectedOutputNode(nodeId);
-        evaluateGraph(nodeId);
-      } else {
-        setSelectedOutputNode(null);
-        setEvaluationResult(undefined);
-      }
-    } else {
-      setSelectedOutputNode(null);
-      setEvaluationResult(undefined);
-    }
-  };
-
-  const handleRefreshEvaluation = () => {
-    if (selectedOutputNode) {
-      evaluateGraph(selectedOutputNode);
-    }
-  };
 
   return (
     <div className="h-screen w-screen flex flex-col">
@@ -387,10 +349,9 @@ export default function Home() {
       <div className="flex-1">
         <GraphEditor 
           key={selectedExample} 
-          graph={graph} 
-          onSelectionChange={handleSelectionChange}
-          evaluationResult={evaluationResult}
-          onRefreshEvaluation={handleRefreshEvaluation}
+          graph={graph}
+          definitions={graph.definitions as NodeDefinitionWithImpl[]}
+          evaluateFn={evaluate}
         />
       </div>
     </div>

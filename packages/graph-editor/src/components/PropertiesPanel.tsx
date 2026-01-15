@@ -1,18 +1,71 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useGraph, useSelection } from '../context/GraphContext';
-import type { PropDefinition, Prop } from '@fbp/types';
+import type { PropDefinition, Prop, Graph } from '@fbp/types';
 import { clsx } from 'clsx';
+
+// Type for evaluate function passed from parent
+type EvaluateFn = (graph: Graph, options: { definitions: any[]; outputNode: string; outputPort: string }) => Promise<any>;
 
 interface PropertiesPanelProps {
   evaluationResult?: unknown;
   onRefreshEvaluation?: () => void;
+  evaluateFn?: EvaluateFn;
+  definitions?: any[];
 }
 
-export function PropertiesPanel({ evaluationResult, onRefreshEvaluation }: PropertiesPanelProps) {
+export function PropertiesPanel({ evaluationResult: externalResult, onRefreshEvaluation, evaluateFn, definitions }: PropertiesPanelProps) {
   const { state, dispatch, getDefinition, getShortName, isChannelReference } = useGraph();
   const { selection } = useSelection();
+  const [internalResult, setInternalResult] = useState<unknown>(undefined);
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  
+  // Use internal result if we have evaluateFn, otherwise use external result
+  const evaluationResult = evaluateFn ? internalResult : externalResult;
 
   const selectedNodeIds = Array.from(selection.nodeIds);
+  
+  // Get the selected node for evaluation
+  const selectedNodeId = selectedNodeIds.length === 1 ? selectedNodeIds[0] : null;
+  const selectedNode = selectedNodeId ? state.graph.nodes.find(n => n.name === selectedNodeId) : null;
+  const isOutputNode = selectedNode?.type === 'core/graph/output';
+  
+  // Evaluate when output node is selected and we have evaluateFn
+  const handleEvaluate = useCallback(async () => {
+    if (!evaluateFn || !definitions || !selectedNodeId || !isOutputNode) return;
+    
+    setIsEvaluating(true);
+    try {
+      const result = await evaluateFn(state.graph as Graph, {
+        definitions,
+        outputNode: selectedNodeId,
+        outputPort: 'value'
+      });
+      setInternalResult(result);
+    } catch (e) {
+      console.error('Evaluation error:', e);
+      setInternalResult(undefined);
+    } finally {
+      setIsEvaluating(false);
+    }
+  }, [evaluateFn, definitions, selectedNodeId, isOutputNode, state.graph]);
+  
+  // Auto-evaluate when output node is selected
+  useEffect(() => {
+    if (isOutputNode && evaluateFn && definitions) {
+      handleEvaluate();
+    } else if (!isOutputNode) {
+      setInternalResult(undefined);
+    }
+  }, [selectedNodeId, isOutputNode, evaluateFn, definitions]);
+  
+  // Handle refresh - use internal evaluation if available, otherwise external
+  const handleRefresh = useCallback(() => {
+    if (evaluateFn && definitions) {
+      handleEvaluate();
+    } else if (onRefreshEvaluation) {
+      onRefreshEvaluation();
+    }
+  }, [evaluateFn, definitions, handleEvaluate, onRefreshEvaluation]);
   
   if (selectedNodeIds.length === 0) {
     return (
@@ -78,22 +131,39 @@ export function PropertiesPanel({ evaluationResult, onRefreshEvaluation }: Prope
           <div className="mt-6 pt-4 border-t border-slate-700">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-slate-500 uppercase tracking-wider">Evaluated Result</span>
-              {onRefreshEvaluation && (
-                <button
-                  onClick={onRefreshEvaluation}
-                  className="p-1.5 rounded hover:bg-slate-700 text-slate-400 hover:text-slate-200 transition-colors"
-                  title="Re-evaluate graph"
+              <button
+                onClick={handleRefresh}
+                disabled={isEvaluating}
+                className={clsx(
+                  "p-1.5 rounded transition-colors",
+                  isEvaluating 
+                    ? "text-slate-600 cursor-not-allowed" 
+                    : "hover:bg-slate-700 text-slate-400 hover:text-slate-200"
+                )}
+                title="Re-evaluate graph"
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="14" 
+                  height="14" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  className={isEvaluating ? "animate-spin" : ""}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                    <path d="M3 3v5h5" />
-                    <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
-                    <path d="M16 21h5v-5" />
-                  </svg>
-                </button>
-              )}
+                  <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                  <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                  <path d="M16 21h5v-5" />
+                </svg>
+              </button>
             </div>
-            {evaluationResult !== undefined ? (
+            {isEvaluating ? (
+              <div className="text-slate-500 text-sm">Evaluating...</div>
+            ) : evaluationResult !== undefined ? (
               <div className="bg-slate-800 rounded p-3 overflow-auto max-h-64">
                 {typeof evaluationResult === 'number' ? (
                   <span className="text-2xl font-mono text-green-400">{evaluationResult}</span>
