@@ -27,6 +27,7 @@ export const graphInputDef: NodeDefinitionWithImpl = {
   context: 'core',
   category: 'graph',
   type: 'core/graph/input',
+  icon: '→',
   inputs: [],
   outputs: [{ name: 'value', type: 'any' }],
   props: [
@@ -41,6 +42,7 @@ export const graphOutputDef: NodeDefinitionWithImpl = {
   context: 'core',
   category: 'graph',
   type: 'core/graph/output',
+  icon: '←',
   inputs: [{ name: 'value', type: 'any' }],
   outputs: [],
   props: [
@@ -54,6 +56,7 @@ export const graphPropDef: NodeDefinitionWithImpl = {
   context: 'core',
   category: 'graph',
   type: 'core/graph/prop',
+  icon: '⚙',
   inputs: [],
   outputs: [{ name: 'value', type: 'any' }],
   props: [
@@ -68,6 +71,7 @@ export const pageDef: NodeDefinitionWithImpl = {
   context: 'ui',
   category: 'layout',
   type: 'ui/layout/Page',
+  icon: '📄',
   inputs: [
     { name: 'children', type: 'Element[]', multi: true }
   ],
@@ -91,6 +95,7 @@ export const formDef: NodeDefinitionWithImpl = {
   context: 'ui',
   category: 'form',
   type: 'ui/form/Form',
+  icon: '📝',
   inputs: [
     { name: 'children', type: 'Element[]', multi: true }
   ],
@@ -114,6 +119,7 @@ export const inputDef: NodeDefinitionWithImpl = {
   context: 'ui',
   category: 'form',
   type: 'ui/form/Input',
+  icon: '⌨',
   inputs: [],
   outputs: [{ name: 'element', type: 'Element' }],
   props: [
@@ -140,6 +146,7 @@ export const buttonDef: NodeDefinitionWithImpl = {
   context: 'ui',
   category: 'form',
   type: 'ui/form/Button',
+  icon: '🔘',
   inputs: [],
   outputs: [{ name: 'element', type: 'Element' }],
   props: [
@@ -164,6 +171,7 @@ export const textDef: NodeDefinitionWithImpl = {
   context: 'ui',
   category: 'content',
   type: 'ui/content/Text',
+  icon: 'T',
   inputs: [],
   outputs: [{ name: 'element', type: 'Element' }],
   props: [

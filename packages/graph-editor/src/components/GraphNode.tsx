@@ -174,6 +174,18 @@ export function GraphNode({ node, onStartConnect, onEndConnect }: GraphNodeProps
         strokeWidth={isSelected || isPreview ? 2 : 1}
       />
       
+      {definition?.icon && (
+        <text
+          x={10}
+          y={NODE_HEADER_HEIGHT / 2 + 1}
+          dominantBaseline="middle"
+          fill="rgba(255,255,255,0.7)"
+          fontSize={11}
+          fontFamily="system-ui, sans-serif"
+        >
+          {definition.icon}
+        </text>
+      )}
       <text
         x={NODE_WIDTH / 2}
         y={NODE_HEADER_HEIGHT / 2 + 1}

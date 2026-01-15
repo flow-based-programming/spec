@@ -51,6 +51,7 @@ export interface NodeDefinition {
   outputs?: Port[];
   props?: PropDefinition[];
   description?: string;
+  icon?: string;
 }
 export interface Node {
   name: string;

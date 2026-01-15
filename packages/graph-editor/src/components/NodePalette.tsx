@@ -53,10 +53,11 @@ export function NodePalette() {
                 <button
                   key={def.type}
                   onClick={() => handleAddNode(def)}
-                  className="w-full px-2 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-left text-xs text-slate-300 transition-colors"
+                  className="w-full px-2 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-left text-xs text-slate-300 transition-colors flex items-center gap-2"
                   title={`Add ${def.type}`}
                 >
-                  {def.type.split('/').pop()}
+                  {def.icon && <span className="text-sm opacity-70">{def.icon}</span>}
+                  <span>{def.type.split('/').pop()}</span>
                 </button>
               ))}
             </div>

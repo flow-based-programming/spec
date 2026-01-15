@@ -8,6 +8,7 @@ export const constNumberDef: NodeDefinitionWithImpl = {
   context: 'js',
   category: 'const',
   type: 'js/const/number',
+  icon: '#',
   outputs: [{ name: 'value', type: 'number' }],
   props: [{ name: 'value', type: 'number', default: 0 }],
   description: 'Outputs a constant number value',
@@ -20,6 +21,7 @@ export const addDef: NodeDefinitionWithImpl = {
   context: 'js',
   category: 'math',
   type: 'js/math/add',
+  icon: '+',
   inputs: [
     { name: 'a', type: 'number' },
     { name: 'b', type: 'number' }
@@ -35,6 +37,7 @@ export const multiplyDef: NodeDefinitionWithImpl = {
   context: 'js',
   category: 'math',
   type: 'js/math/multiply',
+  icon: '×',
   inputs: [
     { name: 'a', type: 'number' },
     { name: 'b', type: 'number' }

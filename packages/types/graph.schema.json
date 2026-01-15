@@ -163,7 +163,11 @@
           "default": [],
           "description": "Property schema for this node type."
         },
-        "description": { "type": "string" }
+        "description": { "type": "string" },
+        "icon": {
+          "type": "string",
+          "description": "Icon identifier for this node type (e.g., emoji or icon name from react-icons)."
+        }
       },
       "required": ["context", "category", "type"],
       "additionalProperties": false

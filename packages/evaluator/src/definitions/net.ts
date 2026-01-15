@@ -27,6 +27,7 @@ export const graphqlRequestDef: NodeDefinitionWithImpl = {
   context: 'net',
   category: 'graphql',
   type: 'net/graphql/request',
+  icon: '◇',
   inputs: [
     { name: 'variables', type: 'json' },
     { name: 'headers', type: 'json' }
