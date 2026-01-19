@@ -478,7 +478,7 @@ describe('evaluate', () => {
               },
               // Output boundary node - connects form output to subnet output
               { 
-                name: '@out/element', 
+                name: '@out:element', 
                 type: 'core/graph/output',
                 kind: 'graphOutput'
               }
@@ -486,7 +486,7 @@ describe('evaluate', () => {
             edges: [
               { src: { node: 'emailInput', port: 'element' }, dst: { node: 'form', port: 'children' } },
               { src: { node: 'submitButton', port: 'element' }, dst: { node: 'form', port: 'children' } },
-              { src: { node: 'form', port: 'element' }, dst: { node: '@out/element', port: 'value' } }
+              { src: { node: 'form', port: 'element' }, dst: { node: '@out:element', port: 'value' } }
             ]
           }
         ],
@@ -538,7 +538,7 @@ describe('evaluate', () => {
             nodes: [
               // Input boundary node
               { 
-                name: '@in/content', 
+                name: '@in:content', 
                 type: 'core/graph/input',
                 kind: 'graphInput'
               },
@@ -552,14 +552,14 @@ describe('evaluate', () => {
               },
               // Output boundary node
               { 
-                name: '@out/element', 
+                name: '@out:element', 
                 type: 'core/graph/output',
                 kind: 'graphOutput'
               }
             ],
             edges: [
-              { src: { node: '@in/content', port: 'value' }, dst: { node: 'form', port: 'children' } },
-              { src: { node: 'form', port: 'element' }, dst: { node: '@out/element', port: 'value' } }
+              { src: { node: '@in:content', port: 'value' }, dst: { node: 'form', port: 'children' } },
+              { src: { node: 'form', port: 'element' }, dst: { node: '@out:element', port: 'value' } }
             ]
           }
         ],
@@ -605,21 +605,21 @@ describe('evaluate', () => {
         name: 'input-default-test',
         nodes: [
           { 
-            name: '@in/value', 
+            name: '@in:value', 
             type: 'core/graph/input', 
             kind: 'graphInput',
             props: [{ name: 'default', type: 'number', value: 42 }]
           },
-          { name: '@out/result', type: 'core/graph/output', kind: 'graphOutput' }
+          { name: '@out:result', type: 'core/graph/output', kind: 'graphOutput' }
         ],
         edges: [
-          { src: { node: '@in/value', port: 'value' }, dst: { node: '@out/result', port: 'value' } }
+          { src: { node: '@in:value', port: 'value' }, dst: { node: '@out:result', port: 'value' } }
         ]
       };
 
       const result = await evaluate(graph, {
         definitions: uiDefinitions,
-        outputNode: '@out/result',
+        outputNode: '@out:result',
         outputPort: 'value'
       });
 
@@ -631,21 +631,21 @@ describe('evaluate', () => {
         name: 'input-external-test',
         nodes: [
           { 
-            name: '@in/value', 
+            name: '@in:value', 
             type: 'core/graph/input', 
             kind: 'graphInput',
             props: [{ name: 'default', type: 'number', value: 42 }]
           },
-          { name: '@out/result', type: 'core/graph/output', kind: 'graphOutput' }
+          { name: '@out:result', type: 'core/graph/output', kind: 'graphOutput' }
         ],
         edges: [
-          { src: { node: '@in/value', port: 'value' }, dst: { node: '@out/result', port: 'value' } }
+          { src: { node: '@in:value', port: 'value' }, dst: { node: '@out:result', port: 'value' } }
         ]
       };
 
       const result = await evaluate(graph, {
         definitions: uiDefinitions,
-        outputNode: '@out/result',
+        outputNode: '@out:result',
         outputPort: 'value',
         inputs: { value: 100 }
       });

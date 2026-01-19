@@ -32,8 +32,8 @@ function getNodeHeight(node: Node, definition?: NodeDefinition): number {
   let outputCount = 0;
   
   if (isSubnet) {
-    inputCount = (node.nodes || []).filter(n => n.name.startsWith('@in/')).length;
-    outputCount = (node.nodes || []).filter(n => n.name.startsWith('@out/')).length;
+    inputCount = (node.nodes || []).filter(n => n.name.startsWith('@in:')).length;
+    outputCount = (node.nodes || []).filter(n => n.name.startsWith('@out:')).length;
   } else {
     inputCount = (node.inputs || definition?.inputs || []).length;
     outputCount = (node.outputs || definition?.outputs || []).length;
@@ -148,11 +148,11 @@ function autoLayoutNodes(nodes: Node[], edges: Edge[]): Node[] {
   const START_Y = 50;
 
   // Separate nodes by type
-  const inputNodes = nodes.filter(n => n.name.startsWith('@in/'));
-  const outputNodes = nodes.filter(n => n.name.startsWith('@out/'));
-  const propNodes = nodes.filter(n => n.name.startsWith('@prop/'));
+  const inputNodes = nodes.filter(n => n.name.startsWith('@in:'));
+  const outputNodes = nodes.filter(n => n.name.startsWith('@out:'));
+  const propNodes = nodes.filter(n => n.name.startsWith('@prop:'));
   const regularNodes = nodes.filter(n => 
-    !n.name.startsWith('@in/') && !n.name.startsWith('@out/') && !n.name.startsWith('@prop/')
+    !n.name.startsWith('@in:') && !n.name.startsWith('@out:') && !n.name.startsWith('@prop:')
   );
 
   // Build adjacency map for regular nodes (who depends on whom)
@@ -496,9 +496,9 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       });
 
       // Find existing boundary nodes in selection
-      const existingInputs = selectedNodes.filter(n => n.name.startsWith('@in/'));
-      const existingOutputs = selectedNodes.filter(n => n.name.startsWith('@out/'));
-      const existingProps = selectedNodes.filter(n => n.name.startsWith('@prop/'));
+      const existingInputs = selectedNodes.filter(n => n.name.startsWith('@in:'));
+      const existingOutputs = selectedNodes.filter(n => n.name.startsWith('@out:'));
+      const existingProps = selectedNodes.filter(n => n.name.startsWith('@prop:'));
 
       // Create new boundary nodes for external connections
       const newInputNodes: Node[] = [];
@@ -511,7 +511,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       const subnetNumber = existingSubnets.length + 1;
       const subnetName = `subnet${subnetNumber}`;
 
-      // Process incoming edges - create @in/ nodes
+      // Process incoming edges - create @in: nodes
       let inputCounter = existingInputs.length + 1;
       const incomingPortMap = new Map<string, string>(); // "dstNode:dstPort" -> inputPortName
       
@@ -519,10 +519,10 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
         const key = `${edge.dst.node}:${edge.dst.port}`;
         if (!incomingPortMap.has(key)) {
           const inputName = `input${inputCounter++}`;
-          const inputNodeName = `@in/${inputName}`;
+          const inputNodeName = `@in:${inputName}`;
           incomingPortMap.set(key, inputName);
           
-          // Create @in/ node inside subnet
+          // Create @in: node inside subnet
           newInputNodes.push({
             name: inputNodeName,
             type: 'core/graph/input',
@@ -530,7 +530,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
             meta: { x: (edge.dst.node ? (selectedNodes.find(n => n.name === edge.dst.node)?.meta?.x || 0) - 150 : 0), y: selectedNodes.find(n => n.name === edge.dst.node)?.meta?.y || 0 }
           });
           
-          // Create internal edge from @in/ to original destination
+          // Create internal edge from @in: to original destination
           newInternalEdges.push({
             src: { node: inputNodeName, port: 'value' },
             dst: { node: edge.dst.node, port: edge.dst.port }
@@ -545,7 +545,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
         });
       });
 
-      // Process outgoing edges - create @out/ nodes
+      // Process outgoing edges - create @out: nodes
       let outputCounter = existingOutputs.length + 1;
       const outgoingPortMap = new Map<string, string>(); // "srcNode:srcPort" -> outputPortName
       
@@ -553,10 +553,10 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
         const key = `${edge.src.node}:${edge.src.port}`;
         if (!outgoingPortMap.has(key)) {
           const outputName = `output${outputCounter++}`;
-          const outputNodeName = `@out/${outputName}`;
+          const outputNodeName = `@out:${outputName}`;
           outgoingPortMap.set(key, outputName);
           
-          // Create @out/ node inside subnet
+          // Create @out: node inside subnet
           newOutputNodes.push({
             name: outputNodeName,
             type: 'core/graph/output',
@@ -564,7 +564,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
             meta: { x: (selectedNodes.find(n => n.name === edge.src.node)?.meta?.x || 0) + 150, y: selectedNodes.find(n => n.name === edge.src.node)?.meta?.y || 0 }
           });
           
-          // Create internal edge from original source to @out/
+          // Create internal edge from original source to @out:
           newInternalEdges.push({
             src: { node: edge.src.node, port: edge.src.port },
             dst: { node: outputNodeName, port: 'value' }
@@ -581,14 +581,14 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
 
       // Build subnet inputs/outputs/props from boundary nodes
       const subnetInputs = [
-        ...existingInputs.map(n => ({ name: n.name.replace('@in/', ''), type: 'any' })),
+        ...existingInputs.map(n => ({ name: n.name.replace('@in:', ''), type: 'any' })),
         ...Array.from(incomingPortMap.values()).map(name => ({ name, type: 'any' }))
       ];
       const subnetOutputs = [
-        ...existingOutputs.map(n => ({ name: n.name.replace('@out/', ''), type: 'any' })),
+        ...existingOutputs.map(n => ({ name: n.name.replace('@out:', ''), type: 'any' })),
         ...Array.from(outgoingPortMap.values()).map(name => ({ name, type: 'any' }))
       ];
-      const subnetProps = existingProps.map(n => ({ name: n.name.replace('@prop/', ''), type: 'any' }));
+      const subnetProps = existingProps.map(n => ({ name: n.name.replace('@prop:', ''), type: 'any' }));
 
       // Collect all nodes for the subnet and apply autolayout
       const allSubnetNodes = [...selectedNodes, ...newInputNodes, ...newOutputNodes];

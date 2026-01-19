@@ -252,19 +252,19 @@
           "type": "array",
           "items": { "$ref": "#/definitions/Port" },
           "default": [],
-          "description": "External input interface for the graph. Drives generation of GraphInput boundary nodes (@in/<portName>)."
+          "description": "External input interface for the graph. Drives generation of GraphInput boundary nodes (@in:<portName>)."
         },
         "outputs": {
           "type": "array",
           "items": { "$ref": "#/definitions/Port" },
           "default": [],
-          "description": "External output interface for the graph. Drives generation of GraphOutput boundary nodes (@out/<portName>)."
+          "description": "External output interface for the graph. Drives generation of GraphOutput boundary nodes (@out:<portName>)."
         },
         "props": {
           "type": "array",
           "items": { "$ref": "#/definitions/PropDefinition" },
           "default": [],
-          "description": "Configuration parameters for the graph. Drives generation of GraphProp boundary nodes (@prop/<paramName>)."
+          "description": "Configuration parameters for the graph. Drives generation of GraphProp boundary nodes (@prop:<paramName>)."
         },
         "nodes": {
           "type": "array",
@@ -299,7 +299,7 @@
     "Channels: Edge.channel is optional. If omitted, it is treated as 'main'. Only serialize when non-main.",
     "Subnets: Any Node with child nodes/edges is a subnet. Its public interface is defined by its inputs/outputs/props fields.",
     "Boundary adapters (UI): For any subnet, GraphInput, GraphOutput, and GraphProp nodes are generated deterministically from the subnet's declared inputs/outputs/props (Strategy 1). They are special node kinds and not treated as normal nodes.",
-    "Deterministic generation: Generated boundary node names and ordering must be stable (e.g., '@in/<portName>', '@out/<portName>', '@prop/<paramName>', sorted by name) to support canonicalization/merkle hashing.",
+    "Deterministic generation: Generated boundary node names and ordering must be stable (e.g., '@in:<portName>', '@out:<portName>', '@prop:<paramName>', sorted by name) to support canonicalization/merkle hashing.",
     "Validation: Edges must connect src.port that exists in src node outputs to dst.port that exists in dst node inputs (or that exists in the node type registry signature for that node's (context, type) if you choose registry-derived ports).",
     "Canonicalization: Consider sorting inputs/outputs/props arrays by name and excluding UI-only metadata fields from hashing to keep content-addressable IDs stable across layout changes."
   ]

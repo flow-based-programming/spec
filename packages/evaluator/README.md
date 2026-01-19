@@ -58,7 +58,7 @@ console.log(result); // 8
 
 - **Lazy evaluation**: Only evaluates nodes that are needed for the output
 - **Multi-input ports**: Supports ports that accept multiple incoming edges (values collected in edge array order)
-- **Boundary nodes**: Supports `@in/`, `@out/`, and `@prop/` boundary nodes for graph inputs/outputs/props
+- **Boundary nodes**: Supports `@in:`, `@out:`, and `@prop:` boundary nodes for graph inputs/outputs/props
 
 ## API
 
@@ -72,7 +72,7 @@ Evaluates a graph starting from the specified output node/port.
   - `definitions: NodeDefinitionWithImpl[]` - Node definitions with implementations
   - `outputNode: string` - The node to get output from
   - `outputPort: string` - The port to get output from
-  - `inputs?: Record<string, any>` - External inputs for `@in/` nodes
-  - `props?: Record<string, any>` - Props for `@prop/` nodes
+  - `inputs?: Record<string, any>` - External inputs for `@in:` nodes
+  - `props?: Record<string, any>` - Props for `@prop:` nodes
 
 **Returns:** The value at the specified output port

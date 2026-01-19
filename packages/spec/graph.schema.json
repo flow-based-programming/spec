@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "GraphSpec",
-  "description": "Storage schema for flow-based programming graphs. Boundary nodes (@in/, @out/, @prop/) ARE the interface definition - no separate inputs/outputs/props arrays needed. This is the minimal canonical format for persistence.",
+  "description": "Storage schema for flow-based programming graphs. Boundary nodes (@in:, @out:, @prop:) ARE the interface definition - no separate inputs/outputs/props arrays needed. This is the minimal canonical format for persistence.",
   "$ref": "#/definitions/Graph",
   "definitions": {
     "NodeMeta": {
@@ -51,7 +51,7 @@
         },
         "ref": {
           "type": "boolean",
-          "description": "If true, value is a reference path (e.g., '@prop/myProp')."
+          "description": "If true, value is a reference path (e.g., '@prop:myProp')."
         }
       },
       "required": ["name"],
@@ -60,7 +60,7 @@
 
     "Node": {
       "type": "object",
-      "description": "A node in the graph. For subnets, the interface is defined by boundary nodes (@in/, @out/, @prop/) inside - NO separate inputs/outputs/props arrays.",
+      "description": "A node in the graph. For subnets, the interface is defined by boundary nodes (@in:, @out:, @prop:) inside - NO separate inputs/outputs/props arrays.",
       "properties": {
         "name": {
           "type": "string",
@@ -95,7 +95,7 @@
 
     "Graph": {
       "type": "object",
-      "description": "Top-level graph container. Interface is defined by boundary nodes (@in/, @out/, @prop/) at root level - NO separate inputs/outputs/props arrays.",
+      "description": "Top-level graph container. Interface is defined by boundary nodes (@in:, @out:, @prop:) at root level - NO separate inputs/outputs/props arrays.",
       "properties": {
         "name": {
           "type": "string",
@@ -186,7 +186,7 @@
   },
 
   "x-spec-rules": [
-    "Boundary nodes ARE the interface: @in/name, @out/name, @prop/name nodes define the subnet's ports. No separate inputs/outputs/props arrays.",
+    "Boundary nodes ARE the interface: @in:name, @out:name, @prop:name nodes define the subnet's ports. No separate inputs/outputs/props arrays.",
     "Edges are per-scope: Each node with children stores its own edges array.",
     "Paths: Node identity is path-based (e.g., '/subnet1/nested/myNode'). Root is '/'.",
     "Minimal storage: Only store what's needed to reconstruct the graph. Derived data is computed at runtime."

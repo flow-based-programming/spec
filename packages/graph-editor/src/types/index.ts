@@ -6,7 +6,7 @@
  * 2. View State (how you're looking at it - cwd, selections, pan/zoom)
  * 
  * Key concepts:
- * - Filesystem mental model: nodes are folders, boundary nodes (@in/@out/@prop) define interfaces
+ * - Filesystem mental model: nodes are folders, boundary nodes (@in:@out:@prop) define interfaces
  * - Process model: each tab/view is a "process" with its own cwd, selection, view state
  * - Single source of truth: boundary nodes ARE the interface definition
  * - Derived fields: inputs/outputs/props are computed from boundary nodes at runtime
@@ -146,9 +146,9 @@ export type BoundaryNodeType = 'input' | 'output' | 'prop';
  * Boundary node prefixes
  */
 export const BOUNDARY_PREFIXES = {
-  input: '@in/',
-  output: '@out/',
-  prop: '@prop/',
+  input: '@in:',
+  output: '@out:',
+  prop: '@prop:',
 } as const;
 
 /**
@@ -172,7 +172,7 @@ export function getBoundaryType(name: string): BoundaryNodeType | null {
 
 /**
  * Get the port name from a boundary node name
- * e.g., "@in/input1" -> "input1"
+ * e.g., "@in:input1" -> "input1"
  */
 export function getPortNameFromBoundary(name: string): string | null {
   const type = getBoundaryType(name);

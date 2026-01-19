@@ -28,11 +28,11 @@ import type {
  * For subnet nodes, inputs/outputs are derived from boundary nodes.
  */
 export interface RuntimeNode extends Node {
-  /** Derived from @in/ boundary nodes (for subnets) */
+  /** Derived from @in: boundary nodes (for subnets) */
   inputs?: PortDef[];
-  /** Derived from @out/ boundary nodes (for subnets) */
+  /** Derived from @out: boundary nodes (for subnets) */
   outputs?: PortDef[];
-  /** Derived from @prop/ boundary nodes (for subnets) */
+  /** Derived from @prop: boundary nodes (for subnets) */
   props?: PropDef[];
   /** Child nodes with derived data */
   nodes?: RuntimeNode[];
@@ -43,11 +43,11 @@ export interface RuntimeNode extends Node {
  * Inputs/outputs/props are derived from root-level boundary nodes.
  */
 export interface RuntimeGraph extends Omit<Graph, 'nodes'> {
-  /** Derived from @in/ boundary nodes */
+  /** Derived from @in: boundary nodes */
   inputs?: PortDef[];
-  /** Derived from @out/ boundary nodes */
+  /** Derived from @out: boundary nodes */
   outputs?: PortDef[];
-  /** Derived from @prop/ boundary nodes */
+  /** Derived from @prop: boundary nodes */
   props?: PropDef[];
   /** Nodes with derived data */
   nodes: RuntimeNode[];

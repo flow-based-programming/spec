@@ -4,7 +4,7 @@ import type { PropDefinition, Prop, Graph } from '@fbp/types';
 import { clsx } from 'clsx';
 import { CodeEditor } from './CodeEditor';
 
-const BOUNDARY_PREFIXES = ['@in/', '@out/', '@prop/'];
+const BOUNDARY_PREFIXES = ['@in:', '@out:', '@prop:'];
 
 // Type for evaluate function passed from parent
 type EvaluateFn = (graph: Graph, options: { definitions: any[]; outputNode: string; outputPort: string }) => Promise<any>;

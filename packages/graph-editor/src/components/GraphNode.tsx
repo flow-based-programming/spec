@@ -7,7 +7,7 @@ import { NodeIconSvg } from './NodeIcon';
 // Derive ports from boundary nodes inside a subnet (ensures ports are always in sync)
 // Exported so GraphEdge can also use it for port position lookups
 export function deriveBoundaryPorts(nodes: Node[], type: 'input' | 'output'): Port[] {
-  const prefix = type === 'input' ? '@in/' : '@out/';
+  const prefix = type === 'input' ? '@in:' : '@out:';
   return nodes
     .filter(n => n.name.startsWith(prefix))
     .map(n => {

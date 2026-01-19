@@ -58,9 +58,9 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
       throw new Error(`Node not found: ${nodeName}`);
     }
 
-    // Handle special boundary nodes (@in/, @out/, @prop/)
-    if (nodeName.startsWith('@in/')) {
-      const inputName = nodeName.slice(4); // Remove '@in/' prefix
+    // Handle special boundary nodes (@in:, @out:, @prop:)
+    if (nodeName.startsWith('@in:')) {
+      const inputName = nodeName.slice(4); // Remove '@in:' prefix
       // Check external inputs first, then fall back to node's default prop
       let value = inputs[inputName];
       if (value === undefined) {
@@ -72,8 +72,8 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
       return result;
     }
 
-    if (nodeName.startsWith('@prop/')) {
-      const propName = nodeName.slice(6); // Remove '@prop/' prefix
+    if (nodeName.startsWith('@prop:')) {
+      const propName = nodeName.slice(6); // Remove '@prop:' prefix
       const value = props[propName];
       const result = { value };
       cache.set(nodeName, result);
@@ -102,8 +102,8 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
       
       if (node.outputs) {
         for (const outputPort of node.outputs) {
-          // The output boundary node name is @out/<portName>
-          const outputNodeName = `@out/${outputPort.name}`;
+          // The output boundary node name is @out:<portName>
+          const outputNodeName = `@out:${outputPort.name}`;
           
           // Recursively evaluate the subnet's internal graph
           const subnetResult = await evaluate(

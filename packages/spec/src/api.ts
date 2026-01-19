@@ -463,9 +463,9 @@ export function findBoundaryNodes(graph: Graph, scopePath: string): {
 } {
   const nodes = getNodes(graph, scopePath);
   return {
-    inputs: nodes.filter(n => n.name.startsWith('@in/')),
-    outputs: nodes.filter(n => n.name.startsWith('@out/')),
-    props: nodes.filter(n => n.name.startsWith('@prop/'))
+    inputs: nodes.filter(n => n.name.startsWith('@in:')),
+    outputs: nodes.filter(n => n.name.startsWith('@out:')),
+    props: nodes.filter(n => n.name.startsWith('@prop:'))
   };
 }
 

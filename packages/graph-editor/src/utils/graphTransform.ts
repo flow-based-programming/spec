@@ -3,7 +3,7 @@
  * 
  * Handles conversion between storage format and runtime format.
  * 
- * Storage format: Boundary nodes (@in/@out/@prop) ARE the interface definition.
+ * Storage format: Boundary nodes (@in:@out:@prop) ARE the interface definition.
  *                 No redundant inputs/outputs/props arrays.
  * 
  * Runtime format: inputs/outputs/props are DERIVED from boundary nodes.
@@ -26,7 +26,7 @@ import { BOUNDARY_PREFIXES, getPortNameFromBoundary, getBoundaryType } from '../
  * Derive input/output ports from boundary nodes in a node list.
  * This is the single source of truth for port definitions.
  * 
- * @param nodes - List of nodes (may include @in/@out/@prop boundary nodes)
+ * @param nodes - List of nodes (may include @in:@out:@prop boundary nodes)
  * @param type - Which type of ports to derive ('input' or 'output')
  * @returns Array of Port definitions derived from boundary nodes
  */
@@ -46,9 +46,9 @@ export function deriveBoundaryPorts(nodes: Node[], type: 'input' | 'output'): Po
 }
 
 /**
- * Derive prop definitions from @prop/ boundary nodes.
+ * Derive prop definitions from @prop: boundary nodes.
  * 
- * @param nodes - List of nodes (may include @prop/ boundary nodes)
+ * @param nodes - List of nodes (may include @prop: boundary nodes)
  * @returns Array of PropDefinition derived from boundary nodes
  */
 export function deriveBoundaryProps(nodes: Node[]): PropDefinition[] {
@@ -249,9 +249,9 @@ export function updateEdgesAtScope(
  * This is called when loading a graph to ensure runtime format.
  * 
  * For the root graph and all subnets, this:
- * 1. Derives inputs from @in/ boundary nodes
- * 2. Derives outputs from @out/ boundary nodes
- * 3. Derives props from @prop/ boundary nodes
+ * 1. Derives inputs from @in: boundary nodes
+ * 2. Derives outputs from @out: boundary nodes
+ * 3. Derives props from @prop: boundary nodes
  */
 export function ensureDerivedPorts(graph: Graph): Graph {
   // Derive root-level ports from boundary nodes
@@ -321,7 +321,7 @@ export function migrateLegacyGraph(graph: Graph): Graph {
   // Generate boundary nodes from inputs/outputs/props
   const boundaryNodes: Node[] = [];
   
-  // Generate @in/ nodes from inputs
+  // Generate @in: nodes from inputs
   (graph.inputs || []).forEach((port, i) => {
     boundaryNodes.push({
       name: `${BOUNDARY_PREFIXES.input}${port.name}`,
@@ -332,7 +332,7 @@ export function migrateLegacyGraph(graph: Graph): Graph {
     });
   });
   
-  // Generate @out/ nodes from outputs
+  // Generate @out: nodes from outputs
   (graph.outputs || []).forEach((port, i) => {
     boundaryNodes.push({
       name: `${BOUNDARY_PREFIXES.output}${port.name}`,
@@ -343,7 +343,7 @@ export function migrateLegacyGraph(graph: Graph): Graph {
     });
   });
   
-  // Generate @prop/ nodes from props
+  // Generate @prop: nodes from props
   (graph.props || []).forEach((prop, i) => {
     const propNodes: { name: string; type: string; value: unknown }[] = [];
     if (prop.type !== 'any') {
