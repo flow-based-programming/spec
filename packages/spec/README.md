@@ -35,7 +35,7 @@ The storage layer is designed for content-addressable storage (merkle trees) whe
 
 Traditional graph formats store interface definitions in two places:
 1. `inputs/outputs/props` arrays on the node/graph
-2. Boundary nodes inside subnets (`@in:`, `@out:`, `@prop:`)
+2. Boundary nodes inside subnets
 
 This dual representation causes sync bugs when one is updated without the other.
 
@@ -46,13 +46,20 @@ The `inputs/outputs/props` arrays are:
 - **Derived at runtime** from boundary nodes
 - **Cached** in the renderer layer for performance
 
-### Boundary Node Naming Convention
+### Boundary Node Design
 
-| Prefix | Purpose | Example |
-|--------|---------|---------|
-| `@in:` | Input port | `@in:value`, `@in:items` |
-| `@out:` | Output port | `@out:result`, `@out:error` |
-| `@prop:` | Configuration property | `@prop:threshold`, `@prop:mode` |
+Boundary nodes use a **property-based approach** that separates the tree key (storage identifier) from the semantic name (port/prop name):
+
+| Node Type | Purpose | Key Example | Properties |
+|-----------|---------|-------------|------------|
+| `graphInput` | Input port | `input_a` | `portName: "a"`, `dataType: "number"` |
+| `graphOutput` | Output port | `output_result` | `portName: "result"`, `dataType: "number"` |
+| `graphProp` | Configuration property | `prop_threshold` | `propName: "threshold"`, `dataType: "number"`, `default: 0.5` |
+
+**Key benefits:**
+- The node's `type` property identifies it as a boundary node (no prefix parsing needed)
+- The port/prop name is stored as a property, allowing flexible renaming without moving the node
+- Clean separation between tree structure and semantic meaning
 
 ### Path-Based Identity
 
@@ -112,7 +119,7 @@ interface Node {
 
 **Required fields:** `name`, `type`
 
-**Subnet detection:** A node with `nodes` array is a subnet. Its interface is defined by its internal boundary nodes (`@in:`, `@out:`, `@prop:`).
+**Subnet detection:** A node with `nodes` array is a subnet. Its interface is defined by its internal boundary nodes (nodes with type `graphInput`, `graphOutput`, or `graphProp`).
 
 ### Edge
 
@@ -222,9 +229,9 @@ These rules define the semantics of the storage format:
 
 ### Rule 1: Boundary Nodes ARE the Interface
 
-Boundary nodes (`@in:name`, `@out:name`, `@prop:name`) define a subnet's ports. There are no separate `inputs/outputs/props` arrays in the storage format.
+Boundary nodes (nodes with type `graphInput`, `graphOutput`, or `graphProp`) define a subnet's ports. There are no separate `inputs/outputs/props` arrays in the storage format.
 
-**Derivation:** At runtime, iterate over a scope's nodes and extract those with boundary prefixes to derive the interface.
+**Derivation:** At runtime, iterate over a scope's nodes and extract those with boundary types. The port/prop name is read from the `portName` or `propName` property.
 
 ### Rule 2: Edges are Per-Scope
 
@@ -258,9 +265,9 @@ A node with derived port information.
 
 ```typescript
 interface RuntimeNode extends Node {
-  inputs?: PortDef[];         // Derived from @in: boundary nodes
-  outputs?: PortDef[];        // Derived from @out: boundary nodes
-  props?: PropDef[];          // Derived from @prop: boundary nodes
+  inputs?: PortDef[];         // Derived from graphInput boundary nodes
+  outputs?: PortDef[];        // Derived from graphOutput boundary nodes
+  props?: PropDef[];          // Derived from graphProp boundary nodes
   nodes?: RuntimeNode[];      // Children with derived data
 }
 ```
@@ -271,9 +278,9 @@ A graph with derived port information.
 
 ```typescript
 interface RuntimeGraph extends Graph {
-  inputs?: PortDef[];         // Derived from @in: boundary nodes
-  outputs?: PortDef[];        // Derived from @out: boundary nodes
-  props?: PropDef[];          // Derived from @prop: boundary nodes
+  inputs?: PortDef[];         // Derived from graphInput boundary nodes
+  outputs?: PortDef[];        // Derived from graphOutput boundary nodes
+  props?: PropDef[];          // Derived from graphProp boundary nodes
   nodes: RuntimeNode[];       // Nodes with derived data
 }
 ```
@@ -535,9 +542,9 @@ Find boundary nodes at a scope.
 ```typescript
 const boundary = findBoundaryNodes(graph, '/subnet1');
 // {
-//   inputs: [{ name: '@in:a', type: 'graphInput', ... }],
-//   outputs: [{ name: '@out:result', type: 'graphOutput', ... }],
-//   props: [{ name: '@prop:mode', type: 'graphProp', ... }]
+//   inputs: [{ name: 'input_a', type: 'graphInput', props: [{ name: 'portName', value: 'a' }] }],
+//   outputs: [{ name: 'output_result', type: 'graphOutput', props: [{ name: 'portName', value: 'result' }] }],
+//   props: [{ name: 'prop_mode', type: 'graphProp', props: [{ name: 'propName', value: 'mode' }] }]
 // }
 ```
 
@@ -588,20 +595,35 @@ A graph that adds two numbers:
 ```json
 {
   "nodes": [
-    { "name": "@in:a", "type": "graphInput", "meta": { "x": 0, "y": 0 } },
-    { "name": "@in:b", "type": "graphInput", "meta": { "x": 0, "y": 100 } },
+    { 
+      "name": "input_a", 
+      "type": "graphInput", 
+      "meta": { "x": 0, "y": 0 },
+      "props": [{ "name": "portName", "value": "a" }, { "name": "dataType", "value": "number" }]
+    },
+    { 
+      "name": "input_b", 
+      "type": "graphInput", 
+      "meta": { "x": 0, "y": 100 },
+      "props": [{ "name": "portName", "value": "b" }, { "name": "dataType", "value": "number" }]
+    },
     { "name": "add1", "type": "math/add", "meta": { "x": 200, "y": 50 } },
-    { "name": "@out:result", "type": "graphOutput", "meta": { "x": 400, "y": 50 } }
+    { 
+      "name": "output_result", 
+      "type": "graphOutput", 
+      "meta": { "x": 400, "y": 50 },
+      "props": [{ "name": "portName", "value": "result" }, { "name": "dataType", "value": "number" }]
+    }
   ],
   "edges": [
-    { "src": { "node": "@in:a", "port": "value" }, "dst": { "node": "add1", "port": "a" } },
-    { "src": { "node": "@in:b", "port": "value" }, "dst": { "node": "add1", "port": "b" } },
-    { "src": { "node": "add1", "port": "result" }, "dst": { "node": "@out:result", "port": "value" } }
+    { "src": { "node": "input_a", "port": "value" }, "dst": { "node": "add1", "port": "a" } },
+    { "src": { "node": "input_b", "port": "value" }, "dst": { "node": "add1", "port": "b" } },
+    { "src": { "node": "add1", "port": "result" }, "dst": { "node": "output_result", "port": "value" } }
   ]
 }
 ```
 
-**Derived interface:** `inputs: [a, b]`, `outputs: [result]`
+**Derived interface:** `inputs: [a, b]`, `outputs: [result]` (derived from `portName` properties)
 
 ### Subnet Example
 
@@ -610,30 +632,46 @@ A graph with a reusable "double" subnet:
 ```json
 {
   "nodes": [
-    { "name": "@in:value", "type": "graphInput" },
+    { 
+      "name": "input_value", 
+      "type": "graphInput",
+      "props": [{ "name": "portName", "value": "value" }]
+    },
     {
       "name": "double",
       "type": "subnet",
       "nodes": [
-        { "name": "@in:x", "type": "graphInput" },
+        { 
+          "name": "input_x", 
+          "type": "graphInput",
+          "props": [{ "name": "portName", "value": "x" }]
+        },
         { "name": "mult", "type": "math/multiply", "props": [{ "name": "b", "value": 2 }] },
-        { "name": "@out:result", "type": "graphOutput" }
+        { 
+          "name": "output_result", 
+          "type": "graphOutput",
+          "props": [{ "name": "portName", "value": "result" }]
+        }
       ],
       "edges": [
-        { "src": { "node": "@in:x", "port": "value" }, "dst": { "node": "mult", "port": "a" } },
-        { "src": { "node": "mult", "port": "result" }, "dst": { "node": "@out:result", "port": "value" } }
+        { "src": { "node": "input_x", "port": "value" }, "dst": { "node": "mult", "port": "a" } },
+        { "src": { "node": "mult", "port": "result" }, "dst": { "node": "output_result", "port": "value" } }
       ]
     },
-    { "name": "@out:doubled", "type": "graphOutput" }
+    { 
+      "name": "output_doubled", 
+      "type": "graphOutput",
+      "props": [{ "name": "portName", "value": "doubled" }]
+    }
   ],
   "edges": [
-    { "src": { "node": "@in:value", "port": "value" }, "dst": { "node": "double", "port": "x" } },
-    { "src": { "node": "double", "port": "result" }, "dst": { "node": "@out:doubled", "port": "value" } }
+    { "src": { "node": "input_value", "port": "value" }, "dst": { "node": "double", "port": "x" } },
+    { "src": { "node": "double", "port": "result" }, "dst": { "node": "output_doubled", "port": "value" } }
   ]
 }
 ```
 
-**Subnet interface:** Derived from `@in:x` and `@out:result` inside the subnet.
+**Subnet interface:** Derived from `input_x` (portName: "x") and `output_result` (portName: "result") inside the subnet.
 
 ### Using the API
 
@@ -648,32 +686,44 @@ import {
 // Start with empty graph
 let graph = { nodes: [], edges: [] };
 
-// Add boundary nodes
-graph = insertNode(graph, '/', { name: '@in:a', type: 'graphInput' });
-graph = insertNode(graph, '/', { name: '@in:b', type: 'graphInput' });
-graph = insertNode(graph, '/', { name: '@out:result', type: 'graphOutput' });
+// Add boundary nodes with portName properties
+graph = insertNode(graph, '/', { 
+  name: 'input_a', 
+  type: 'graphInput',
+  props: [{ name: 'portName', value: 'a' }, { name: 'dataType', value: 'number' }]
+});
+graph = insertNode(graph, '/', { 
+  name: 'input_b', 
+  type: 'graphInput',
+  props: [{ name: 'portName', value: 'b' }, { name: 'dataType', value: 'number' }]
+});
+graph = insertNode(graph, '/', { 
+  name: 'output_result', 
+  type: 'graphOutput',
+  props: [{ name: 'portName', value: 'result' }, { name: 'dataType', value: 'number' }]
+});
 
 // Add processing node
 graph = insertNode(graph, '/', { name: 'add1', type: 'math/add' });
 
-// Connect edges
+// Connect edges (reference nodes by their keys)
 graph = addEdge(graph, '/', { 
-  src: { node: '@in:a', port: 'value' }, 
+  src: { node: 'input_a', port: 'value' }, 
   dst: { node: 'add1', port: 'a' } 
 });
 graph = addEdge(graph, '/', { 
-  src: { node: '@in:b', port: 'value' }, 
+  src: { node: 'input_b', port: 'value' }, 
   dst: { node: 'add1', port: 'b' } 
 });
 graph = addEdge(graph, '/', { 
   src: { node: 'add1', port: 'result' }, 
-  dst: { node: '@out:result', port: 'value' } 
+  dst: { node: 'output_result', port: 'value' } 
 });
 
-// Derive interface
+// Derive interface from boundary nodes
 const boundary = findBoundaryNodes(graph, '/');
-console.log(boundary.inputs);  // [@in:a, @in:b]
-console.log(boundary.outputs); // [@out:result]
+console.log(boundary.inputs);  // [{ name: 'input_a', portName: 'a', ... }]
+console.log(boundary.outputs); // [{ name: 'output_result', portName: 'result', ... }]
 ```
 
 ---
@@ -695,11 +745,31 @@ Legacy graphs may have explicit `inputs/outputs/props` arrays:
 
 **Migration steps:**
 
-1. For each item in `inputs`, create a `@in:{name}` boundary node
-2. For each item in `outputs`, create a `@out:{name}` boundary node
-3. For each item in `props`, create a `@prop:{name}` boundary node
+1. For each item in `inputs`, create a `graphInput` boundary node with `portName` property
+2. For each item in `outputs`, create a `graphOutput` boundary node with `portName` property
+3. For each item in `props`, create a `graphProp` boundary node with `propName` property
 4. Remove the `inputs/outputs/props` arrays
-5. Update edges that reference the old port names
+5. Update edges to reference the new node keys
+
+**Example migration:**
+```json
+// Before (legacy)
+{ "inputs": [{ "name": "a", "type": "number" }] }
+
+// After (property-based)
+{ 
+  "nodes": [
+    { 
+      "name": "input_a", 
+      "type": "graphInput", 
+      "props": [
+        { "name": "portName", "value": "a" },
+        { "name": "dataType", "value": "number" }
+      ]
+    }
+  ]
+}
+```
 
 The `@fbp/graph-editor` package includes a `migrateLegacyGraph()` function that handles this automatically.
 
