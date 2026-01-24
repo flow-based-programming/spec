@@ -1,6 +1,6 @@
 {
   "name": "@fbp/spec",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "Dan Lynch <pyramation@gmail.com>",
   "description": "Storage specification and API for flow-based programming graphs",
   "main": "index.js",
@@ -29,7 +29,12 @@
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch"
   },
-  "keywords": ["fbp", "flow-based-programming", "graph", "spec"],
+  "keywords": [
+    "fbp",
+    "flow-based-programming",
+    "graph",
+    "spec"
+  ],
   "dependencies": {
     "schema-typescript": "^0.11.0"
   },
