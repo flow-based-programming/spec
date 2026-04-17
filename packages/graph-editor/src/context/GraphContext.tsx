@@ -16,6 +16,32 @@ import {
 } from '../utils/graphTransform';
 import { BOUNDARY_NODE_TYPES, isBoundaryNodeType } from '../types';
 
+// Built-in definitions for boundary node types
+// These ensure graphInput/graphOutput/graphProp nodes render their ports
+const BOUNDARY_NODE_DEFINITIONS: NodeDefinition[] = [
+  {
+    context: 'core',
+    category: 'graph',
+    type: BOUNDARY_NODE_TYPES.input, // 'graphInput'
+    inputs: [],
+    outputs: [{ name: 'value', type: 'any' }],
+  },
+  {
+    context: 'core',
+    category: 'graph',
+    type: BOUNDARY_NODE_TYPES.output, // 'graphOutput'
+    inputs: [{ name: 'value', type: 'any' }],
+    outputs: [{ name: 'value', type: 'any' }],
+  },
+  {
+    context: 'core',
+    category: 'graph',
+    type: BOUNDARY_NODE_TYPES.prop, // 'graphProp'
+    inputs: [],
+    outputs: [{ name: 'value', type: 'any' }],
+  },
+];
+
 // Re-export getEdgeId for backward compatibility
 export { getEdgeId } from '../utils/graphTransform';
 
@@ -234,6 +260,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
         ...state,
         graph: migratedGraph,
         definitions: new Map([
+          ...BOUNDARY_NODE_DEFINITIONS.map(d => [d.type, d] as [string, NodeDefinition]),
           ...state.definitions,
           ...(migratedGraph.definitions || []).map(d => [d.type, d] as [string, NodeDefinition])
         ])
@@ -950,6 +977,7 @@ export function GraphProvider({ children, initialGraph, externalDefinitions, onS
     ...initialState,
     graph: migratedInitialGraph,
     definitions: new Map([
+      ...BOUNDARY_NODE_DEFINITIONS.map(d => [d.type, d] as [string, NodeDefinition]),
       ...(migratedInitialGraph.definitions || []).map(d => [d.type, d] as [string, NodeDefinition]),
       ...(externalDefinitions || []).map(d => [d.type, d] as [string, NodeDefinition])
     ])

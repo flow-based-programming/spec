@@ -85,6 +85,21 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
       return result;
     }
 
+    if (node.type === 'graphOutput') {
+      // graphOutput is a pass-through: evaluate its upstream 'value' input
+      const portEdges = edgesByDst.get(nodeName);
+      const edges = portEdges?.get('value') ?? [];
+      let value: any = undefined;
+      if (edges.length > 0) {
+        const edge = edges[0];
+        const upstreamOutputs = await evaluateNode(edge.src.node);
+        value = upstreamOutputs[edge.src.port];
+      }
+      const result = { value };
+      cache.set(nodeName, result);
+      return result;
+    }
+
     // Handle subnet nodes (kind: 'subnet')
     if (node.kind === 'subnet' && node.nodes && node.edges) {
       // Collect inputs for the subnet by evaluating upstream nodes
