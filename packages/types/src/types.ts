@@ -42,7 +42,6 @@ export interface Group {
   nodes: string[];
   meta?: Metadata;
 }
-export type NodeKind = "node" | "subnet" | "graphInput" | "graphOutput" | "graphProp";
 export interface NodeDefinition {
   context: string;
   name: string;
@@ -57,8 +56,7 @@ export interface NodeDefinition {
 }
 export interface Node {
   name: string;
-  definition: string;
-  kind?: NodeKind;
+  type: string;
   context?: string;
   meta?: Metadata;
   props?: Prop[];

@@ -16,10 +16,10 @@ describe('digital assets', () => {
         name: 'double-internal',
         context: 'js',
         nodes: [
-          { name: 'input_x', definition: 'graphInput', kind: 'graphInput', props: [{ name: 'portName', type: 'string', value: 'x' }] },
-          { name: 'two', definition: 'number', props: [{ name: 'value', type: 'number', value: 2 }] },
-          { name: 'mul', definition: 'multiply' },
-          { name: 'output_result', definition: 'graphOutput', kind: 'graphOutput', props: [{ name: 'portName', type: 'string', value: 'result' }] }
+          { name: 'input_x', type: 'graphInput',  props: [{ name: 'portName', type: 'string', value: 'x' }] },
+          { name: 'two', type: 'number', props: [{ name: 'value', type: 'number', value: 2 }] },
+          { name: 'mul', type: 'multiply' },
+          { name: 'output_result', type: 'graphOutput',  props: [{ name: 'portName', type: 'string', value: 'result' }] }
         ],
         edges: [
           { src: { node: 'input_x', port: 'value' }, dst: { node: 'mul', port: 'a' } },
@@ -36,8 +36,8 @@ describe('digital assets', () => {
         name: 'use-double',
         context: 'js',
         nodes: [
-          { name: 'num', definition: 'number', props: [{ name: 'value', type: 'number', value: 7 }] },
-          { name: 'dbl', definition: 'double' }
+          { name: 'num', type: 'number', props: [{ name: 'value', type: 'number', value: 7 }] },
+          { name: 'dbl', type: 'double' }
         ],
         edges: [
           { src: { node: 'num', port: 'value' }, dst: { node: 'dbl', port: 'x' } }
@@ -59,10 +59,10 @@ describe('digital assets', () => {
         name: 'double-then-add',
         context: 'js',
         nodes: [
-          { name: 'num1', definition: 'number', props: [{ name: 'value', type: 'number', value: 5 }] },
-          { name: 'num2', definition: 'number', props: [{ name: 'value', type: 'number', value: 3 }] },
-          { name: 'dbl', definition: 'double' },
-          { name: 'add', definition: 'add' }
+          { name: 'num1', type: 'number', props: [{ name: 'value', type: 'number', value: 5 }] },
+          { name: 'num2', type: 'number', props: [{ name: 'value', type: 'number', value: 3 }] },
+          { name: 'dbl', type: 'double' },
+          { name: 'add', type: 'add' }
         ],
         edges: [
           { src: { node: 'num1', port: 'value' }, dst: { node: 'dbl', port: 'x' } },
@@ -102,15 +102,15 @@ describe('digital assets', () => {
         context: 'js',
         nodes: [
           // Boundary nodes
-          { name: 'in_a', definition: 'graphInput', kind: 'graphInput', props: [{ name: 'portName', type: 'string', value: 'a' }] },
-          { name: 'in_b', definition: 'graphInput', kind: 'graphInput', props: [{ name: 'portName', type: 'string', value: 'b' }] },
-          { name: 'p_wa', definition: 'graphProp', kind: 'graphProp', props: [{ name: 'propName', type: 'string', value: 'weight_a' }] },
-          { name: 'p_wb', definition: 'graphProp', kind: 'graphProp', props: [{ name: 'propName', type: 'string', value: 'weight_b' }] },
-          { name: 'out', definition: 'graphOutput', kind: 'graphOutput', props: [{ name: 'portName', type: 'string', value: 'result' }] },
+          { name: 'in_a', type: 'graphInput',  props: [{ name: 'portName', type: 'string', value: 'a' }] },
+          { name: 'in_b', type: 'graphInput',  props: [{ name: 'portName', type: 'string', value: 'b' }] },
+          { name: 'p_wa', type: 'graphProp',  props: [{ name: 'propName', type: 'string', value: 'weight_a' }] },
+          { name: 'p_wb', type: 'graphProp',  props: [{ name: 'propName', type: 'string', value: 'weight_b' }] },
+          { name: 'out', type: 'graphOutput',  props: [{ name: 'portName', type: 'string', value: 'result' }] },
           // Computation
-          { name: 'mul_a', definition: 'multiply' },
-          { name: 'mul_b', definition: 'multiply' },
-          { name: 'sum', definition: 'add' }
+          { name: 'mul_a', type: 'multiply' },
+          { name: 'mul_b', type: 'multiply' },
+          { name: 'sum', type: 'add' }
         ],
         edges: [
           { src: { node: 'in_a', port: 'value' }, dst: { node: 'mul_a', port: 'a' } },
@@ -131,9 +131,9 @@ describe('digital assets', () => {
         name: 'weighted-add-defaults',
         context: 'js',
         nodes: [
-          { name: 'a', definition: 'number', props: [{ name: 'value', type: 'number', value: 10 }] },
-          { name: 'b', definition: 'number', props: [{ name: 'value', type: 'number', value: 20 }] },
-          { name: 'wadd', definition: 'weighted-add' }
+          { name: 'a', type: 'number', props: [{ name: 'value', type: 'number', value: 10 }] },
+          { name: 'b', type: 'number', props: [{ name: 'value', type: 'number', value: 20 }] },
+          { name: 'wadd', type: 'weighted-add' }
         ],
         edges: [
           { src: { node: 'a', port: 'value' }, dst: { node: 'wadd', port: 'a' } },
@@ -156,9 +156,9 @@ describe('digital assets', () => {
         name: 'weighted-add-custom',
         context: 'js',
         nodes: [
-          { name: 'a', definition: 'number', props: [{ name: 'value', type: 'number', value: 10 }] },
-          { name: 'b', definition: 'number', props: [{ name: 'value', type: 'number', value: 20 }] },
-          { name: 'wadd', definition: 'weighted-add', props: [
+          { name: 'a', type: 'number', props: [{ name: 'value', type: 'number', value: 10 }] },
+          { name: 'b', type: 'number', props: [{ name: 'value', type: 'number', value: 20 }] },
+          { name: 'wadd', type: 'weighted-add', props: [
             { name: 'weight_a', type: 'number', value: 0.7 },
             { name: 'weight_b', type: 'number', value: 0.3 }
           ]}
@@ -184,19 +184,19 @@ describe('digital assets', () => {
         name: 'two-weighted-adds',
         context: 'js',
         nodes: [
-          { name: 'a', definition: 'number', props: [{ name: 'value', type: 'number', value: 10 }] },
-          { name: 'b', definition: 'number', props: [{ name: 'value', type: 'number', value: 20 }] },
+          { name: 'a', type: 'number', props: [{ name: 'value', type: 'number', value: 10 }] },
+          { name: 'b', type: 'number', props: [{ name: 'value', type: 'number', value: 20 }] },
           // Instance 1: weight_a=2, weight_b=3
-          { name: 'wadd1', definition: 'weighted-add', props: [
+          { name: 'wadd1', type: 'weighted-add', props: [
             { name: 'weight_a', type: 'number', value: 2 },
             { name: 'weight_b', type: 'number', value: 3 }
           ]},
           // Instance 2: weight_a=0.5, weight_b=0.5
-          { name: 'wadd2', definition: 'weighted-add', props: [
+          { name: 'wadd2', type: 'weighted-add', props: [
             { name: 'weight_a', type: 'number', value: 0.5 },
             { name: 'weight_b', type: 'number', value: 0.5 }
           ]},
-          { name: 'final_add', definition: 'add' }
+          { name: 'final_add', type: 'add' }
         ],
         edges: [
           { src: { node: 'a', port: 'value' }, dst: { node: 'wadd1', port: 'a' } },
@@ -246,10 +246,10 @@ describe('digital assets', () => {
         name: 'double-internal',
         context: 'js',
         nodes: [
-          { name: 'input_x', definition: 'graphInput', kind: 'graphInput', props: [{ name: 'portName', type: 'string', value: 'x' }] },
-          { name: 'two', definition: 'number', props: [{ name: 'value', type: 'number', value: 2 }] },
-          { name: 'mul', definition: 'multiply' },
-          { name: 'output_result', definition: 'graphOutput', kind: 'graphOutput', props: [{ name: 'portName', type: 'string', value: 'result' }] }
+          { name: 'input_x', type: 'graphInput',  props: [{ name: 'portName', type: 'string', value: 'x' }] },
+          { name: 'two', type: 'number', props: [{ name: 'value', type: 'number', value: 2 }] },
+          { name: 'mul', type: 'multiply' },
+          { name: 'output_result', type: 'graphOutput',  props: [{ name: 'portName', type: 'string', value: 'result' }] }
         ],
         edges: [
           { src: { node: 'input_x', port: 'value' }, dst: { node: 'mul', port: 'a' } },
@@ -270,10 +270,10 @@ describe('digital assets', () => {
         name: 'quadruple-internal',
         context: 'js',
         nodes: [
-          { name: 'input_x', definition: 'graphInput', kind: 'graphInput', props: [{ name: 'portName', type: 'string', value: 'x' }] },
-          { name: 'dbl1', definition: 'double' },
-          { name: 'dbl2', definition: 'double' },
-          { name: 'output_result', definition: 'graphOutput', kind: 'graphOutput', props: [{ name: 'portName', type: 'string', value: 'result' }] }
+          { name: 'input_x', type: 'graphInput',  props: [{ name: 'portName', type: 'string', value: 'x' }] },
+          { name: 'dbl1', type: 'double' },
+          { name: 'dbl2', type: 'double' },
+          { name: 'output_result', type: 'graphOutput',  props: [{ name: 'portName', type: 'string', value: 'result' }] }
         ],
         edges: [
           { src: { node: 'input_x', port: 'value' }, dst: { node: 'dbl1', port: 'x' } },
@@ -290,8 +290,8 @@ describe('digital assets', () => {
         name: 'use-quadruple',
         context: 'js',
         nodes: [
-          { name: 'num', definition: 'number', props: [{ name: 'value', type: 'number', value: 3 }] },
-          { name: 'quad', definition: 'quadruple' }
+          { name: 'num', type: 'number', props: [{ name: 'value', type: 'number', value: 3 }] },
+          { name: 'quad', type: 'quadruple' }
         ],
         edges: [
           { src: { node: 'num', port: 'value' }, dst: { node: 'quad', port: 'x' } }
@@ -326,10 +326,10 @@ describe('digital assets', () => {
               name: 'triple-internal',
               context: 'js',
               nodes: [
-                { name: 'input_x', definition: 'graphInput', kind: 'graphInput', props: [{ name: 'portName', type: 'string', value: 'x' }] },
-                { name: 'three', definition: 'number', props: [{ name: 'value', type: 'number', value: 3 }] },
-                { name: 'mul', definition: 'multiply' },
-                { name: 'output_result', definition: 'graphOutput', kind: 'graphOutput', props: [{ name: 'portName', type: 'string', value: 'result' }] }
+                { name: 'input_x', type: 'graphInput',  props: [{ name: 'portName', type: 'string', value: 'x' }] },
+                { name: 'three', type: 'number', props: [{ name: 'value', type: 'number', value: 3 }] },
+                { name: 'mul', type: 'multiply' },
+                { name: 'output_result', type: 'graphOutput',  props: [{ name: 'portName', type: 'string', value: 'result' }] }
               ],
               edges: [
                 { src: { node: 'input_x', port: 'value' }, dst: { node: 'mul', port: 'a' } },
@@ -340,8 +340,8 @@ describe('digital assets', () => {
           }
         ],
         nodes: [
-          { name: 'num', definition: 'number', props: [{ name: 'value', type: 'number', value: 5 }] },
-          { name: 'trip', definition: 'triple' }
+          { name: 'num', type: 'number', props: [{ name: 'value', type: 'number', value: 5 }] },
+          { name: 'trip', type: 'triple' }
         ],
         edges: [
           { src: { node: 'num', port: 'value' }, dst: { node: 'trip', port: 'x' } }
@@ -374,7 +374,7 @@ describe('digital assets', () => {
           name: 'empty-internal',
           context: 'js',
           nodes: [
-            { name: 'input_x', definition: 'graphInput', kind: 'graphInput', props: [{ name: 'portName', type: 'string', value: 'x' }] }
+            { name: 'input_x', type: 'graphInput',  props: [{ name: 'portName', type: 'string', value: 'x' }] }
           ],
           edges: []
         }
@@ -384,8 +384,8 @@ describe('digital assets', () => {
         name: 'use-empty',
         context: 'js',
         nodes: [
-          { name: 'num', definition: 'number', props: [{ name: 'value', type: 'number', value: 5 }] },
-          { name: 'empty', definition: 'broken/empty' }
+          { name: 'num', type: 'number', props: [{ name: 'value', type: 'number', value: 5 }] },
+          { name: 'empty', type: 'broken/empty' }
         ],
         edges: [
           { src: { node: 'num', port: 'value' }, dst: { node: 'empty', port: 'x' } }
@@ -415,8 +415,8 @@ describe('digital assets', () => {
         name: 'use-no-impl',
         context: 'js',
         nodes: [
-          { name: 'num', definition: 'number', props: [{ name: 'value', type: 'number', value: 5 }] },
-          { name: 'broken', definition: 'broken/no-impl' }
+          { name: 'num', type: 'number', props: [{ name: 'value', type: 'number', value: 5 }] },
+          { name: 'broken', type: 'broken/no-impl' }
         ],
         edges: [
           { src: { node: 'num', port: 'value' }, dst: { node: 'broken', port: 'x' } }

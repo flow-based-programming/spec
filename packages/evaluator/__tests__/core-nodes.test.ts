@@ -12,7 +12,7 @@ describe('core nodes', () => {
         nodes: [
           { 
             name: 'input_data', 
-            definition: 'graphInput', kind: 'graphInput',
+            type: 'graphInput', 
             props: [
               { name: 'portName', type: 'string', value: 'data' },
               { name: 'default', type: 'json', value: { user: { name: 'Alice', age: 30 } } }
@@ -20,7 +20,7 @@ describe('core nodes', () => {
           },
           { 
             name: 'select', 
-            definition: 'select',
+            type: 'select',
             props: [{ name: 'path', type: 'string', value: 'user.name' }]
           }
         ],
@@ -45,7 +45,7 @@ describe('core nodes', () => {
         nodes: [
           { 
             name: 'input_data', 
-            definition: 'graphInput', kind: 'graphInput',
+            type: 'graphInput', 
             props: [
               { name: 'portName', type: 'string', value: 'data' },
               { name: 'default', type: 'json', value: { response: { data: { users: [{ id: 1 }, { id: 2 }] } } } }
@@ -53,7 +53,7 @@ describe('core nodes', () => {
           },
           { 
             name: 'select', 
-            definition: 'select',
+            type: 'select',
             props: [{ name: 'path', type: 'string', value: 'response.data.users.1.id' }]
           }
         ],
@@ -78,7 +78,7 @@ describe('core nodes', () => {
         nodes: [
           { 
             name: 'input_data', 
-            definition: 'graphInput', kind: 'graphInput',
+            type: 'graphInput', 
             props: [
               { name: 'portName', type: 'string', value: 'data' },
               { name: 'default', type: 'json', value: { foo: 'bar' } }
@@ -86,7 +86,7 @@ describe('core nodes', () => {
           },
           { 
             name: 'select', 
-            definition: 'select',
+            type: 'select',
             props: [{ name: 'path', type: 'string', value: 'baz.qux' }]
           }
         ],

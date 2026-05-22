@@ -148,7 +148,7 @@ export interface EditorState {
 export type BoundaryNodeType = 'input' | 'output' | 'prop';
 
 /**
- * Boundary node kind values (used in node.kind field)
+ * System type names for boundary nodes (detected via node.type)
  */
 export const BOUNDARY_NODE_KINDS = {
   input: 'graphInput',
@@ -157,30 +157,30 @@ export const BOUNDARY_NODE_KINDS = {
 } as const;
 
 /**
- * Check if a node is a boundary node by its kind property
+ * Check if a node is a boundary node by its type
  */
-export function isBoundaryNode(node: { kind?: string }): boolean {
-  return node.kind === BOUNDARY_NODE_KINDS.input ||
-         node.kind === BOUNDARY_NODE_KINDS.output ||
-         node.kind === BOUNDARY_NODE_KINDS.prop;
+export function isBoundaryNode(node: { type: string }): boolean {
+  return node.type === BOUNDARY_NODE_KINDS.input ||
+         node.type === BOUNDARY_NODE_KINDS.output ||
+         node.type === BOUNDARY_NODE_KINDS.prop;
 }
 
 /**
- * Check if a node kind string is a boundary node kind
+ * Check if a type string is a boundary node type
  */
-export function isBoundaryNodeKind(kind: string | undefined): boolean {
-  return kind === BOUNDARY_NODE_KINDS.input ||
-         kind === BOUNDARY_NODE_KINDS.output ||
-         kind === BOUNDARY_NODE_KINDS.prop;
+export function isBoundaryNodeKind(type: string | undefined): boolean {
+  return type === BOUNDARY_NODE_KINDS.input ||
+         type === BOUNDARY_NODE_KINDS.output ||
+         type === BOUNDARY_NODE_KINDS.prop;
 }
 
 /**
- * Get the boundary type from a node's kind property
+ * Get the boundary type from a node's type
  */
-export function getBoundaryType(node: { kind?: string }): BoundaryNodeType | null {
-  if (node.kind === BOUNDARY_NODE_KINDS.input) return 'input';
-  if (node.kind === BOUNDARY_NODE_KINDS.output) return 'output';
-  if (node.kind === BOUNDARY_NODE_KINDS.prop) return 'prop';
+export function getBoundaryType(node: { type: string }): BoundaryNodeType | null {
+  if (node.type === BOUNDARY_NODE_KINDS.input) return 'input';
+  if (node.type === BOUNDARY_NODE_KINDS.output) return 'output';
+  if (node.type === BOUNDARY_NODE_KINDS.prop) return 'prop';
   return null;
 }
 
@@ -188,7 +188,7 @@ export function getBoundaryType(node: { kind?: string }): BoundaryNodeType | nul
  * Get the port/prop name from a boundary node's properties
  * Reads from 'portName' property for inputs/outputs, 'propName' for props
  */
-export function getPortNameFromBoundary(node: { kind?: string; props?: Array<{ name: string; value?: unknown }> }): string | null {
+export function getPortNameFromBoundary(node: { type: string; props?: Array<{ name: string; value?: unknown }> }): string | null {
   const boundaryType = getBoundaryType(node);
   if (!boundaryType) return null;
   

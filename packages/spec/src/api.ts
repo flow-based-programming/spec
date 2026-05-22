@@ -451,7 +451,7 @@ export function findNodes(
 
 /**
  * Find all boundary nodes (inputs, outputs, props) at a scope.
- * Uses kind-based detection (node.kind === 'graphInput', 'graphOutput', 'graphProp').
+ * Uses kind-based detection (node.type === 'graphInput', 'graphOutput', 'graphProp').
  * 
  * @param graph - The graph
  * @param scopePath - The scope to search
@@ -464,9 +464,9 @@ export function findBoundaryNodes(graph: Graph, scopePath: string): {
 } {
   const nodes = getNodes(graph, scopePath);
   return {
-    inputs: nodes.filter(n => n.kind === 'graphInput'),
-    outputs: nodes.filter(n => n.kind === 'graphOutput'),
-    props: nodes.filter(n => n.kind === 'graphProp')
+    inputs: nodes.filter(n => n.type === 'graphInput'),
+    outputs: nodes.filter(n => n.type === 'graphOutput'),
+    props: nodes.filter(n => n.type === 'graphProp')
   };
 }
 

@@ -12,7 +12,7 @@ import { BOUNDARY_NODE_KINDS, getPortNameFromBoundary, getDataTypeFromBoundary }
 export function deriveBoundaryPorts(nodes: Node[], type: 'input' | 'output'): Port[] {
   const nodeKind = type === 'input' ? BOUNDARY_NODE_KINDS.input : BOUNDARY_NODE_KINDS.output;
   return nodes
-    .filter(n => n.kind === nodeKind)
+    .filter(n => n.type === nodeKind)
     .map(n => {
       const portName = getPortNameFromBoundary(n) || n.name;
       const portType = getDataTypeFromBoundary(n);
@@ -39,7 +39,7 @@ export function GraphNode({ node, onStartConnect, onEndConnect }: GraphNodeProps
   const [hoveredPort, setHoveredPort] = useState<{ name: string; isOutput: boolean } | null>(null);
   const dragStart = useRef<{ x: number; y: number; nodeX: number; nodeY: number } | null>(null);
 
-  const definition = getDefinition(node.definition);
+  const definition = getDefinition(node.type);
   const isSelected = selection.nodeIds.has(node.name);
   const isPreview = state.boxSelect.previewNodeIds.has(node.name);
   const isSubnet = node.nodes && node.nodes.length > 0;
@@ -191,7 +191,7 @@ export function GraphNode({ node, onStartConnect, onEndConnect }: GraphNodeProps
         fontWeight={600}
         fontFamily="system-ui, sans-serif"
       >
-        {getShortName(node.definition)}
+        {getShortName(node.type)}
       </text>
       
       {isSubnet && (

@@ -32,7 +32,7 @@ export function NodePalette() {
     
     const newNode = {
       name: `${definition.name.split('/').pop()}_${Date.now().toString(36)}`,
-      definition: definition.name,
+      type: definition.name,
       meta: position
     };
     dispatch({ type: 'ADD_NODE', node: newNode });

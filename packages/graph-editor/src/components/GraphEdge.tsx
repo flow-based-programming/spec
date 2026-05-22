@@ -21,8 +21,8 @@ export function GraphEdge({ edge }: GraphEdgeProps) {
   
   if (!srcNode || !dstNode) return null;
 
-  const srcDef = getDefinition(srcNode.definition);
-  const dstDef = getDefinition(dstNode.definition);
+  const srcDef = getDefinition(srcNode.type);
+  const dstDef = getDefinition(dstNode.type);
 
   const srcPos = getNodePortPosition(srcNode, edge.src.port, true, srcDef);
   const dstPos = getNodePortPosition(dstNode, edge.dst.port, false, dstDef);

@@ -68,9 +68,9 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
       throw new Error(`Node not found: ${nodeName}`);
     }
 
-    // Handle special boundary nodes (graphInput, graphOutput, graphProp)
-    // Boundary nodes are identified by their kind property
-    if (node.kind === 'graphInput') {
+    // Handle system nodes (graphInput, graphOutput, graphProp)
+    // System nodes are identified by their type name — reserved, no definition lookup needed
+    if (node.type === 'graphInput') {
       // Get the port name from the portName property
       const portNameProp = node.props?.find(p => p.name === 'portName');
       const inputName = (portNameProp?.value as string) || nodeName;
@@ -85,7 +85,7 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
       return result;
     }
 
-    if (node.kind === 'graphProp') {
+    if (node.type === 'graphProp') {
       // Get the prop name from the propName property
       const propNameProp = node.props?.find(p => p.name === 'propName');
       const propName = (propNameProp?.value as string) || nodeName;
@@ -95,7 +95,7 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
       return result;
     }
 
-    if (node.kind === 'graphOutput') {
+    if (node.type === 'graphOutput') {
       // graphOutput is a pass-through: evaluate its upstream 'value' input
       const portEdges = edgesByDst.get(nodeName);
       const edges = portEdges?.get('value') ?? [];
@@ -110,8 +110,8 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
       return result;
     }
 
-    // Handle subnet nodes (kind: 'subnet')
-    if (node.kind === 'subnet' && node.nodes && node.edges) {
+    // Handle subnet nodes (type: 'subnet' with inline nodes/edges)
+    if (node.type === 'subnet' && node.nodes && node.edges) {
       // Collect inputs for the subnet by evaluating upstream nodes
       const subnetInputs: Record<string, any> = {};
       const subnetPortEdges = edgesByDst.get(nodeName);
@@ -134,7 +134,7 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
         for (const outputPort of node.outputs) {
           // Find the graphOutput boundary node by matching portName property
           const outputBoundaryNode = node.nodes.find(n => {
-            if (n.kind !== 'graphOutput') return false;
+            if (n.type !== 'graphOutput') return false;
             const portNameProp = n.props?.find(p => p.name === 'portName');
             return (portNameProp?.value as string) === outputPort.name;
           });
@@ -169,9 +169,9 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
 
     // Get the definition for this node — resolve context from node override or graph default
     const nodeContext = node.context || graphContext;
-    const definition = defMap.get(defKey(nodeContext, node.definition));
+    const definition = defMap.get(defKey(nodeContext, node.type));
     if (!definition) {
-      throw new Error(`No definition found for node: ${nodeContext}:${node.definition}`);
+      throw new Error(`No definition found for node: ${nodeContext}:${node.type}`);
     }
 
     // Collect inputs by evaluating upstream nodes
@@ -217,7 +217,7 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
 
       // Find all output boundary nodes in the asset's graph
       const assetOutputs: Record<string, any> = {};
-      const outputBoundaryNodes = assetGraph.nodes.filter(n => n.kind === 'graphOutput');
+      const outputBoundaryNodes = assetGraph.nodes.filter(n => n.type === 'graphOutput');
 
       for (const outputBoundaryNode of outputBoundaryNodes) {
         const portNameProp = outputBoundaryNode.props?.find(p => p.name === 'portName');
@@ -237,7 +237,7 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
 
     // Leaf node: call the implementation function
     if (!definition.impl) {
-      throw new Error(`No implementation found for node: ${nodeContext}:${node.definition}`);
+      throw new Error(`No implementation found for node: ${nodeContext}:${node.type}`);
     }
 
     const outputs = await definition.impl(nodeInputs, nodeProps);

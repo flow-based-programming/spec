@@ -58,8 +58,8 @@ function getNodeHeight(node: Node, definition?: NodeDefinition): number {
   let outputCount = 0;
   
   if (isSubnet) {
-    inputCount = (node.nodes || []).filter(n => n.kind === BOUNDARY_NODE_KINDS.input).length;
-    outputCount = (node.nodes || []).filter(n => n.kind === BOUNDARY_NODE_KINDS.output).length;
+    inputCount = (node.nodes || []).filter(n => n.type === BOUNDARY_NODE_KINDS.input).length;
+    outputCount = (node.nodes || []).filter(n => n.type === BOUNDARY_NODE_KINDS.output).length;
   } else {
     inputCount = (node.inputs || definition?.inputs || []).length;
     outputCount = (node.outputs || definition?.outputs || []).length;
@@ -174,10 +174,10 @@ function autoLayoutNodes(nodes: Node[], edges: Edge[]): Node[] {
   const START_Y = 50;
 
   // Separate nodes by type (boundary nodes identified by type property, not prefix)
-  const inputNodes = nodes.filter(n => n.kind === BOUNDARY_NODE_KINDS.input);
-  const outputNodes = nodes.filter(n => n.kind === BOUNDARY_NODE_KINDS.output);
-  const propNodes = nodes.filter(n => n.kind === BOUNDARY_NODE_KINDS.prop);
-  const regularNodes = nodes.filter(n => !isBoundaryNodeKind(n.kind));
+  const inputNodes = nodes.filter(n => n.type === BOUNDARY_NODE_KINDS.input);
+  const outputNodes = nodes.filter(n => n.type === BOUNDARY_NODE_KINDS.output);
+  const propNodes = nodes.filter(n => n.type === BOUNDARY_NODE_KINDS.prop);
+  const regularNodes = nodes.filter(n => !isBoundaryNodeKind(n.type));
 
   // Build adjacency map for regular nodes (who depends on whom)
   const nodeDepth = new Map<string, number>();
@@ -285,7 +285,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       
       // Count existing boundary nodes of this kind to generate next number (scope-aware)
       const scopedNodes = getNodesAtScope(state.graph, state.cwd);
-      const existingNodes = scopedNodes.filter(n => n.kind === nodeKind);
+      const existingNodes = scopedNodes.filter(n => n.type === nodeKind);
       const existingNumbers = existingNodes.map(n => {
         const match = n.name.match(new RegExp(`^${boundaryType}_(\\d+)$`));
         return match ? parseInt(match[1], 10) : 0;
@@ -298,8 +298,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       const propName = boundaryType === 'prop' ? 'propName' : 'portName';
       const newNode: Node = {
         name: nodeName,
-        definition: nodeKind,
-        kind: nodeKind as any,
+        type: nodeKind,
         meta: { x: position.x, y: position.y },
         props: [{ name: propName, type: 'string', value: portOrPropName }]
       };
@@ -522,9 +521,9 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       });
 
       // Find existing boundary nodes in selection (identified by type, not prefix)
-      const existingInputs = selectedNodes.filter(n => n.kind === BOUNDARY_NODE_KINDS.input);
-      const existingOutputs = selectedNodes.filter(n => n.kind === BOUNDARY_NODE_KINDS.output);
-      const existingProps = selectedNodes.filter(n => n.kind === BOUNDARY_NODE_KINDS.prop);
+      const existingInputs = selectedNodes.filter(n => n.type === BOUNDARY_NODE_KINDS.input);
+      const existingOutputs = selectedNodes.filter(n => n.type === BOUNDARY_NODE_KINDS.output);
+      const existingProps = selectedNodes.filter(n => n.type === BOUNDARY_NODE_KINDS.prop);
 
       // Create new boundary nodes for external connections
       const newInputNodes: Node[] = [];
@@ -533,7 +532,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       const subnetExternalEdges: Edge[] = [];
 
       // Generate unique subnet name
-      const existingSubnets = scopedNodes.filter(n => n.kind === 'subnet' || n.name.startsWith('subnet'));
+      const existingSubnets = scopedNodes.filter(n => n.type === 'subnet' || n.name.startsWith('subnet'));
       const subnetNumber = existingSubnets.length + 1;
       const subnetName = `subnet${subnetNumber}`;
 
@@ -551,8 +550,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
           // Create graphInput node inside subnet (with portName as property)
           newInputNodes.push({
             name: inputNodeName,
-            definition: BOUNDARY_NODE_KINDS.input,
-            kind: BOUNDARY_NODE_KINDS.input as any,
+            type: BOUNDARY_NODE_KINDS.input,
             meta: { x: (edge.dst.node ? (selectedNodes.find(n => n.name === edge.dst.node)?.meta?.x || 0) - 150 : 0), y: selectedNodes.find(n => n.name === edge.dst.node)?.meta?.y || 0 },
             props: [{ name: 'portName', type: 'string', value: inputPortName }]
           });
@@ -586,8 +584,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
           // Create graphOutput node inside subnet (with portName as property)
           newOutputNodes.push({
             name: outputNodeName,
-            definition: BOUNDARY_NODE_KINDS.output,
-            kind: BOUNDARY_NODE_KINDS.output as any,
+            type: BOUNDARY_NODE_KINDS.output,
             meta: { x: (selectedNodes.find(n => n.name === edge.src.node)?.meta?.x || 0) + 150, y: selectedNodes.find(n => n.name === edge.src.node)?.meta?.y || 0 },
             props: [{ name: 'portName', type: 'string', value: outputPortName }]
           });
@@ -634,8 +631,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
       // Create the subnet node
       const subnetNode: Node = {
         name: subnetName,
-        definition: 'subnet',
-        kind: 'subnet' as any,
+        type: 'subnet',
         meta: { x: centerX, y: centerY },
         inputs: subnetInputs,
         outputs: subnetOutputs,
@@ -828,7 +824,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
           .filter(n => {
             const nodeX = n.meta?.x || 0;
             const nodeY = n.meta?.y || 0;
-            const definition = state.definitions.get(n.definition);
+            const definition = state.definitions.get(n.type);
             const nodeHeight = getNodeHeight(n, definition);
             
             // Node bounding box
@@ -869,7 +865,7 @@ function graphReducer(state: GraphEditorState, action: GraphAction): GraphEditor
           .filter(n => {
             const nodeX = n.meta?.x || 0;
             const nodeY = n.meta?.y || 0;
-            const definition = state.definitions.get(n.definition);
+            const definition = state.definitions.get(n.type);
             const nodeHeight = getNodeHeight(n, definition);
             
             // Node bounding box

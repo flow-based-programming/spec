@@ -60,22 +60,17 @@
 
     "Node": {
       "type": "object",
-      "description": "A node instance in the graph. References a NodeDefinition by name (within the graph's context). For boundary nodes, kind identifies the role (graphInput/graphOutput/graphProp).",
+      "description": "A node instance in the graph. References a NodeDefinition by name. System types (graphInput/graphOutput/graphProp) are reserved names handled by the evaluator natively.",
       "properties": {
         "name": {
           "type": "string",
           "minLength": 1,
           "description": "Unique instance name within the parent scope."
         },
-        "definition": {
+        "type": {
           "type": "string",
           "minLength": 1,
-          "description": "References a NodeDefinition by name (within the graph's context)."
-        },
-        "kind": {
-          "type": "string",
-          "enum": ["node", "subnet", "graphInput", "graphOutput", "graphProp"],
-          "description": "Node kind. Boundary nodes (graphInput/graphOutput/graphProp) define the graph interface."
+          "description": "References a NodeDefinition by name. System types: graphInput, graphOutput, graphProp."
         },
         "context": {
           "type": "string",
@@ -98,7 +93,7 @@
           "description": "Edges within this scope."
         }
       },
-      "required": ["name", "definition"],
+      "required": ["name", "type"],
       "additionalProperties": false
     },
 

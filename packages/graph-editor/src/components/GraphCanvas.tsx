@@ -307,7 +307,7 @@ export function GraphCanvas() {
       } else {
         const newNode = {
           name: `${definitionName.split('/').pop()}_${Date.now().toString(36)}`,
-          definition: definitionName,
+          type: definitionName,
           meta: position
         };
         dispatch({ type: 'ADD_NODE', node: newNode });
@@ -338,7 +338,7 @@ export function GraphCanvas() {
     const y = node.meta?.y || 0;
     const isOutput = state.connecting.isOutput;
     
-    const definition = state.definitions.get(node.definition);
+    const definition = state.definitions.get(node.type);
     const ports = isOutput
       ? (node.outputs || definition?.outputs || [])
       : (node.inputs || definition?.inputs || []);

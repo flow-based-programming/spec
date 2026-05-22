@@ -19,8 +19,7 @@ export interface PropValue {
 }
 export interface Node {
   name: string;
-  definition: string;
-  kind?: string;
+  type: string;
   context?: string;
   meta?: NodeMeta;
   props?: PropValue[];

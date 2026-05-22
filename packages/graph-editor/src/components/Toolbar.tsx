@@ -60,7 +60,7 @@ export function Toolbar() {
   const handleAddNode = (definition: NodeDefinition) => {
     const newNode = {
       name: `${definition.name.split('/').pop()}_${Date.now().toString(36)}`,
-      definition: definition.name,
+      type: definition.name,
       meta: { x: 200, y: 200 }
     };
     dispatch({ type: 'ADD_NODE', node: newNode });

@@ -36,7 +36,7 @@ export function PropertiesPanel({ evaluationResult: externalResult, onRefreshEva
   // Get the selected node for evaluation (use scoped nodes for current scope level)
   const selectedNodeId = selectedNodeIds.length === 1 ? selectedNodeIds[0] : null;
   const selectedNode = selectedNodeId ? scopedNodes.find(n => n.name === selectedNodeId) : null;
-  const isOutputNode = selectedNode?.kind === 'graphOutput';
+  const isOutputNode = selectedNode?.type === 'graphOutput';
   
   // Compute boundary node info (safe even when no node selected)
   // Boundary nodes are identified by their type property, not by name prefix
@@ -67,7 +67,7 @@ export function PropertiesPanel({ evaluationResult: externalResult, onRefreshEva
     if (editedName && editedName !== editableNameValue && nodeName && selectedNode) {
       if (nodeIsBoundary) {
         // Update the portName or propName property
-        const propName = selectedNode.kind === BOUNDARY_NODE_KINDS.prop ? 'propName' : 'portName';
+        const propName = selectedNode.type === BOUNDARY_NODE_KINDS.prop ? 'propName' : 'portName';
         dispatch({ type: 'SET_NODE_PROP', nodeId: nodeName, propName, value: editedName });
       } else {
         dispatch({ type: 'RENAME_NODE', oldName: nodeName, newName: editedName });
@@ -172,7 +172,7 @@ export function PropertiesPanel({ evaluationResult: externalResult, onRefreshEva
   
   if (!node) return null;
 
-  const definition = getDefinition(node.definition);
+  const definition = getDefinition(node.type);
   const propDefs = definition?.props || [];
 
   const getPropValue = (propName: string): unknown => {
@@ -190,7 +190,7 @@ export function PropertiesPanel({ evaluationResult: externalResult, onRefreshEva
         <div className="text-xs text-slate-500 mb-1">Node</div>
         <div className="font-semibold text-white flex items-center gap-1">
           {nodeIsBoundary && selectedNode && (
-            <span className="text-slate-500">{selectedNode.kind}:</span>
+            <span className="text-slate-500">{selectedNode.type}:</span>
           )}
           {nodeIsBoundary ? (
             isEditingName ? (
@@ -217,7 +217,7 @@ export function PropertiesPanel({ evaluationResult: externalResult, onRefreshEva
             <span>{node.name}</span>
           )}
         </div>
-        <div className="text-xs text-slate-400 mt-1 font-mono">{node.definition}</div>
+        <div className="text-xs text-slate-400 mt-1 font-mono">{node.type}</div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3">
@@ -234,13 +234,13 @@ export function PropertiesPanel({ evaluationResult: externalResult, onRefreshEva
                 value={getPropValue(propDef.name)}
                 onChange={(value) => handlePropChange(propDef.name, value)}
                 isChannelRef={isChannelReference(getPropValue(propDef.name))}
-                nodeType={node.definition}
+                nodeType={node.type}
               />
             ))}
           </div>
         )}
 
-        {node.kind === 'graphOutput' && (
+        {node.type === 'graphOutput' && (
           <div className="mt-6 pt-4 border-t border-slate-700">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-slate-500 uppercase tracking-wider">Evaluated Result</span>

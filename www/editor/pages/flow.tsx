@@ -36,10 +36,10 @@ export const graph: Graph = {
     },
   ],
   nodes: [
-    { name: 'num1', definition: 'number', meta: { x: 100, y: 100 } },
-    { name: 'num2', definition: 'number', meta: { x: 100, y: 250 } },
-    { name: 'add1', definition: 'add', meta: { x: 350, y: 150 } },
-    { name: 'mult1', definition: 'multiply', meta: { x: 600, y: 150 } },
+    { name: 'num1', type: 'number', meta: { x: 100, y: 100 } },
+    { name: 'num2', type: 'number', meta: { x: 100, y: 250 } },
+    { name: 'add1', type: 'add', meta: { x: 350, y: 150 } },
+    { name: 'mult1', type: 'multiply', meta: { x: 600, y: 150 } },
   ],
   edges: [
     { src: { node: 'num1', port: 'value' }, dst: { node: 'add1', port: 'a' } },
