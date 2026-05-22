@@ -44,12 +44,13 @@ export interface Group {
 }
 export type NodeKind = "node" | "subnet" | "graphInput" | "graphOutput" | "graphProp";
 export interface NodeDefinition {
-  context: string;
-  category: string;
   type: string;
+  category?: string;
   inputs?: Port[];
   outputs?: Port[];
   props?: PropDefinition[];
+  graph?: Graph;
+  volatile?: boolean;
   description?: string;
   icon?: string;
 }

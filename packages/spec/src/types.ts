@@ -46,11 +46,12 @@ export interface PropDef {
 }
 export interface NodeDefinition {
   type: string;
-  context?: string;
   category?: string;
   inputs?: PortDef[];
   outputs?: PortDef[];
   props?: PropDef[];
+  graph?: Graph;
+  volatile?: boolean;
   icon?: string;
   description?: string;
 }

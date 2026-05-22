@@ -24,7 +24,6 @@ function coerceValue(value: any, valueType: string): any {
 
 // Boundary node definitions for graph inputs/outputs
 export const graphInputDef: NodeDefinitionWithImpl = {
-  context: 'core',
   category: 'graph',
   type: 'core/graph/input',
   icon: 'arrow-right',
@@ -39,7 +38,6 @@ export const graphInputDef: NodeDefinitionWithImpl = {
 };
 
 export const graphOutputDef: NodeDefinitionWithImpl = {
-  context: 'core',
   category: 'graph',
   type: 'core/graph/output',
   icon: 'arrow-left',
@@ -53,7 +51,6 @@ export const graphOutputDef: NodeDefinitionWithImpl = {
 };
 
 export const graphPropDef: NodeDefinitionWithImpl = {
-  context: 'core',
   category: 'graph',
   type: 'core/graph/prop',
   icon: 'settings',
@@ -68,7 +65,6 @@ export const graphPropDef: NodeDefinitionWithImpl = {
 };
 
 export const pageDef: NodeDefinitionWithImpl = {
-  context: 'ui',
   category: 'layout',
   type: 'ui/layout/Page',
   icon: 'file',
@@ -92,7 +88,6 @@ export const pageDef: NodeDefinitionWithImpl = {
 };
 
 export const formDef: NodeDefinitionWithImpl = {
-  context: 'ui',
   category: 'form',
   type: 'ui/form/Form',
   icon: 'file-text',
@@ -116,7 +111,6 @@ export const formDef: NodeDefinitionWithImpl = {
 };
 
 export const inputDef: NodeDefinitionWithImpl = {
-  context: 'ui',
   category: 'form',
   type: 'ui/form/Input',
   icon: 'text-cursor',
@@ -143,7 +137,6 @@ export const inputDef: NodeDefinitionWithImpl = {
 };
 
 export const buttonDef: NodeDefinitionWithImpl = {
-  context: 'ui',
   category: 'form',
   type: 'ui/form/Button',
   icon: 'square',
@@ -168,7 +161,6 @@ export const buttonDef: NodeDefinitionWithImpl = {
 };
 
 export const textDef: NodeDefinitionWithImpl = {
-  context: 'ui',
   category: 'content',
   type: 'ui/content/Text',
   icon: 'type',

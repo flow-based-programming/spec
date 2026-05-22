@@ -9,9 +9,9 @@ describe('evaluate', () => {
       const graph: Graph = {
         name: 'simple-add',
         nodes: [
-          { name: 'num1', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 5 }] },
-          { name: 'num2', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 3 }] },
-          { name: 'add', type: 'js/math/add' }
+          { name: 'num1', type: 'const/number', props: [{ name: 'value', type: 'number', value: 5 }] },
+          { name: 'num2', type: 'const/number', props: [{ name: 'value', type: 'number', value: 3 }] },
+          { name: 'add', type: 'math/add' }
         ],
         edges: [
           { src: { node: 'num1', port: 'value' }, dst: { node: 'add', port: 'a' } },
@@ -32,11 +32,11 @@ describe('evaluate', () => {
       const graph: Graph = {
         name: 'chained-math',
         nodes: [
-          { name: 'num1', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 2 }] },
-          { name: 'num2', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 3 }] },
-          { name: 'num3', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 4 }] },
-          { name: 'add', type: 'js/math/add' },
-          { name: 'multiply', type: 'js/math/multiply' }
+          { name: 'num1', type: 'const/number', props: [{ name: 'value', type: 'number', value: 2 }] },
+          { name: 'num2', type: 'const/number', props: [{ name: 'value', type: 'number', value: 3 }] },
+          { name: 'num3', type: 'const/number', props: [{ name: 'value', type: 'number', value: 4 }] },
+          { name: 'add', type: 'math/add' },
+          { name: 'multiply', type: 'math/multiply' }
         ],
         edges: [
           { src: { node: 'num1', port: 'value' }, dst: { node: 'add', port: 'a' } },
@@ -71,10 +71,10 @@ describe('evaluate', () => {
       const graph: Graph = {
         name: 'lazy-test',
         nodes: [
-          { name: 'num1', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 5 }] },
-          { name: 'num2', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 3 }] },
-          { name: 'unused', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 999 }] },
-          { name: 'add', type: 'js/math/add' }
+          { name: 'num1', type: 'const/number', props: [{ name: 'value', type: 'number', value: 5 }] },
+          { name: 'num2', type: 'const/number', props: [{ name: 'value', type: 'number', value: 3 }] },
+          { name: 'unused', type: 'const/number', props: [{ name: 'value', type: 'number', value: 999 }] },
+          { name: 'add', type: 'math/add' }
         ],
         edges: [
           { src: { node: 'num1', port: 'value' }, dst: { node: 'add', port: 'a' } },
@@ -90,9 +90,9 @@ describe('evaluate', () => {
       });
 
       // 'unused' node should NOT be evaluated
-      expect(evaluatedNodes).toContain('js/const/number');
-      expect(evaluatedNodes).toContain('js/math/add');
-      expect(evaluatedNodes.filter(n => n === 'js/const/number').length).toBe(2); // Only num1 and num2
+      expect(evaluatedNodes).toContain('const/number');
+      expect(evaluatedNodes).toContain('math/add');
+      expect(evaluatedNodes.filter(n => n === 'const/number').length).toBe(2); // Only num1 and num2
     });
   });
 

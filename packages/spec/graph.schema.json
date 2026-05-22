@@ -150,20 +150,16 @@
 
     "NodeDefinition": {
       "type": "object",
-      "description": "Definition of a node type (like a class).",
+      "description": "Definition of a node type. The type path follows <context>/<name> (e.g., 'math/add'). When a graph field is present, this is a digital asset (composite node) whose implementation is the internal sub-graph. When absent, it is a leaf node requiring an external implementation.",
       "properties": {
         "type": {
           "type": "string",
           "minLength": 1,
-          "description": "Unique type identifier (e.g., 'math/add')."
-        },
-        "context": {
-          "type": "string",
-          "description": "Namespace (e.g., 'math', 'ui')."
+          "description": "Unique type identifier using <context>/<name> path (e.g., 'math/add', 'ui/form/Input')."
         },
         "category": {
           "type": "string",
-          "description": "Category for palette organization."
+          "description": "Category for editor palette organization."
         },
         "inputs": {
           "type": "array",
@@ -175,7 +171,16 @@
         },
         "props": {
           "type": "array",
-          "items": { "$ref": "#/definitions/PropDef" }
+          "items": { "$ref": "#/definitions/PropDef" },
+          "description": "Promoted parameters. For digital assets, these flow into graphProp boundary nodes in the internal graph."
+        },
+        "graph": {
+          "$ref": "#/definitions/Graph",
+          "description": "Internal sub-graph (digital asset). When present, boundary nodes (graphInput/graphOutput/graphProp) define the interface. The graph IS the implementation."
+        },
+        "volatile": {
+          "type": "boolean",
+          "description": "If true, this node must always be re-evaluated even when inputs haven't changed (e.g., http/fetch, time/now)."
         },
         "icon": { "type": "string" },
         "description": { "type": "string" }

@@ -162,10 +162,6 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
       throw new Error(`No definition found for node type: ${node.type}`);
     }
 
-    if (!definition.impl) {
-      throw new Error(`No implementation found for node type: ${node.type}`);
-    }
-
     // Collect inputs by evaluating upstream nodes
     const nodeInputs: Record<string, any> = {};
     const portEdges = edgesByDst.get(nodeName);
@@ -175,14 +171,12 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
         const edges = portEdges?.get(inputPort.name) ?? [];
         
         if (inputPort.multi) {
-          // Multi-input port: collect all values in edge array order
           const values = await Promise.all(edges.map(async edge => {
             const upstreamOutputs = await evaluateNode(edge.src.node);
             return upstreamOutputs[edge.src.port];
           }));
           nodeInputs[inputPort.name] = values;
         } else {
-          // Single input: take first edge if exists
           if (edges.length > 0) {
             const edge = edges[0];
             const upstreamOutputs = await evaluateNode(edge.src.node);
@@ -192,25 +186,50 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
       }
     }
 
-    // Get props from node instance
+    // Get props from node instance (override definition defaults)
     const nodeProps: Record<string, any> = {};
     if (definition.props) {
       for (const propDef of definition.props) {
-        // First check node instance props
         const instanceProp = node.props?.find(p => p.name === propDef.name);
         if (instanceProp !== undefined && instanceProp.value !== undefined) {
           nodeProps[propDef.name] = instanceProp.value;
         } else if (propDef.default !== undefined) {
-          // Fall back to definition default
           nodeProps[propDef.name] = propDef.default;
         }
       }
     }
 
-    // Call the implementation (await in case it's async)
+    // Digital asset: definition has an internal graph — evaluate it recursively
+    if (definition.graph) {
+      const assetGraph = definition.graph;
+
+      // Find all output boundary nodes in the asset's graph
+      const assetOutputs: Record<string, any> = {};
+      const outputBoundaryNodes = assetGraph.nodes.filter(n => n.type === 'graphOutput');
+
+      for (const outputBoundaryNode of outputBoundaryNodes) {
+        const portNameProp = outputBoundaryNode.props?.find(p => p.name === 'portName');
+        const portName = (portNameProp?.value as string) || outputBoundaryNode.name;
+
+        const result = await evaluate(
+          { name: `${nodeName}_asset`, nodes: assetGraph.nodes, edges: assetGraph.edges },
+          { definitions, outputNode: outputBoundaryNode.name, outputPort: 'value', inputs: nodeInputs, props: nodeProps }
+        );
+
+        assetOutputs[portName] = result;
+      }
+
+      cache.set(nodeName, assetOutputs);
+      return assetOutputs;
+    }
+
+    // Leaf node: call the implementation function
+    if (!definition.impl) {
+      throw new Error(`No implementation found for node type: ${node.type}`);
+    }
+
     const outputs = await definition.impl(nodeInputs, nodeProps);
     
-    // Cache and return
     cache.set(nodeName, outputs);
     return outputs;
   }
