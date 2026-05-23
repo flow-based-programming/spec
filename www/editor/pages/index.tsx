@@ -8,7 +8,7 @@ import {
   netDefinitions as evalNetDefs,
 } from '@fbp/evaluator';
 import type { NodeDefinitionWithImpl } from '@fbp/evaluator';
-import type { Graph } from '@fbp/types';
+import type { Graph, Node } from '@fbp/types';
 
 function coerceValue(value: any, valueType: string): any {
   if (value === undefined || value === null) return value;
@@ -112,6 +112,43 @@ const allDefinitions: NodeDefinitionWithImpl[] = [
   ...evalCoreDefs,
   ...evalNetDefs,
 ];
+
+// Digital asset definition (has internal graph — no impl needed, evaluator handles recursion)
+const weightedAddDef: NodeDefinitionWithImpl = {
+  context: 'js',
+  name: 'weightedAdd',
+  category: 'math',
+  inputs: [{ name: 'a', type: 'number' }, { name: 'b', type: 'number' }],
+  outputs: [{ name: 'result', type: 'number' }],
+  props: [
+    { name: 'weight_a', type: 'number', default: 1.0 },
+    { name: 'weight_b', type: 'number', default: 1.0 }
+  ],
+  description: 'Weighted addition: (a * weight_a) + (b * weight_b)',
+  graph: {
+    name: 'weightedAdd-internal',
+    context: 'js',
+    nodes: [
+      { name: 'in_a', type: 'graphInput', props: [{ name: 'portName', type: 'string', value: 'a' }], meta: { x: 50, y: 50 } },
+      { name: 'in_b', type: 'graphInput', props: [{ name: 'portName', type: 'string', value: 'b' }], meta: { x: 50, y: 250 } },
+      { name: 'p_wa', type: 'graphProp', props: [{ name: 'propName', type: 'string', value: 'weight_a' }], meta: { x: 50, y: 150 } },
+      { name: 'p_wb', type: 'graphProp', props: [{ name: 'propName', type: 'string', value: 'weight_b' }], meta: { x: 50, y: 350 } },
+      { name: 'mul_a', type: 'multiply', meta: { x: 300, y: 100 } },
+      { name: 'mul_b', type: 'multiply', meta: { x: 300, y: 300 } },
+      { name: 'sum', type: 'add', meta: { x: 550, y: 200 } },
+      { name: 'out', type: 'graphOutput', props: [{ name: 'portName', type: 'string', value: 'result' }], meta: { x: 800, y: 200 } }
+    ],
+    edges: [
+      { src: { node: 'in_a', port: 'value' }, dst: { node: 'mul_a', port: 'a' } },
+      { src: { node: 'p_wa', port: 'value' }, dst: { node: 'mul_a', port: 'b' } },
+      { src: { node: 'in_b', port: 'value' }, dst: { node: 'mul_b', port: 'a' } },
+      { src: { node: 'p_wb', port: 'value' }, dst: { node: 'mul_b', port: 'b' } },
+      { src: { node: 'mul_a', port: 'product' }, dst: { node: 'sum', port: 'a' } },
+      { src: { node: 'mul_b', port: 'product' }, dst: { node: 'sum', port: 'b' } },
+      { src: { node: 'sum', port: 'sum' }, dst: { node: 'out', port: 'value' } }
+    ]
+  }
+};
 
 const uiDefinitions: NodeDefinitionWithImpl[] = [
   {
@@ -513,42 +550,7 @@ const examples: Record<string, Graph> = {
     context: 'js',
     definitions: [
       ...allDefinitions,
-      // Digital asset: weighted-add is defined by an internal graph
-      {
-        context: 'js',
-        name: 'weightedAdd',
-        category: 'math',
-        inputs: [{ name: 'a', type: 'number' }, { name: 'b', type: 'number' }],
-        outputs: [{ name: 'result', type: 'number' }],
-        props: [
-          { name: 'weight_a', type: 'number', default: 1.0 },
-          { name: 'weight_b', type: 'number', default: 1.0 }
-        ],
-        description: 'Weighted addition: (a * weight_a) + (b * weight_b)',
-        graph: {
-          name: 'weightedAdd-internal',
-          context: 'js',
-          nodes: [
-            { name: 'in_a', type: 'graphInput', props: [{ name: 'portName', type: 'string', value: 'a' }] },
-            { name: 'in_b', type: 'graphInput', props: [{ name: 'portName', type: 'string', value: 'b' }] },
-            { name: 'p_wa', type: 'graphProp', props: [{ name: 'propName', type: 'string', value: 'weight_a' }] },
-            { name: 'p_wb', type: 'graphProp', props: [{ name: 'propName', type: 'string', value: 'weight_b' }] },
-            { name: 'mul_a', type: 'multiply' },
-            { name: 'mul_b', type: 'multiply' },
-            { name: 'sum', type: 'add' },
-            { name: 'out', type: 'graphOutput', props: [{ name: 'portName', type: 'string', value: 'result' }] }
-          ],
-          edges: [
-            { src: { node: 'in_a', port: 'value' }, dst: { node: 'mul_a', port: 'a' } },
-            { src: { node: 'p_wa', port: 'value' }, dst: { node: 'mul_a', port: 'b' } },
-            { src: { node: 'in_b', port: 'value' }, dst: { node: 'mul_b', port: 'a' } },
-            { src: { node: 'p_wb', port: 'value' }, dst: { node: 'mul_b', port: 'b' } },
-            { src: { node: 'mul_a', port: 'product' }, dst: { node: 'sum', port: 'a' } },
-            { src: { node: 'mul_b', port: 'product' }, dst: { node: 'sum', port: 'b' } },
-            { src: { node: 'sum', port: 'sum' }, dst: { node: 'out', port: 'value' } }
-          ]
-        }
-      }
+      weightedAddDef,
     ],
     nodes: [
       { name: 'num_a', type: 'number', props: [{ name: 'value', type: 'number', value: 5 }], meta: { x: 100, y: 100 } },
@@ -572,11 +574,137 @@ const examples: Record<string, Graph> = {
   }
 };
 
+/**
+ * Build a "workspace graph" that enables browsing:
+ *   / → [js, core, ui, net] (contexts at root)
+ *   /js → [definitions, graphs] (sub-folders within context)
+ *   /js/definitions → [add, multiply, number, weightedAdd, ...]
+ *   /js/definitions/weightedAdd → internal digital asset graph
+ *   /js/graphs → [simple-add, chained-math, ...]
+ *   /js/graphs/simple-add → flow graph (nodes + edges)
+ * 
+ * Navigation uses Enter to dive in, U to go up — same as subnets.
+ */
+function buildWorkspaceGraph(definitions: NodeDefinitionWithImpl[], graphs: Record<string, Graph>): Graph {
+  // Group definitions by context
+  const defsByContext = new Map<string, NodeDefinitionWithImpl[]>();
+  for (const def of definitions) {
+    const ctx = def.context || 'unknown';
+    if (!defsByContext.has(ctx)) defsByContext.set(ctx, []);
+    defsByContext.get(ctx)!.push(def);
+  }
+
+  // Group graphs by context
+  const graphsByContext = new Map<string, { name: string; graph: Graph }[]>();
+  for (const [label, graph] of Object.entries(graphs)) {
+    const ctx = graph.context || 'js';
+    if (!graphsByContext.has(ctx)) graphsByContext.set(ctx, []);
+    graphsByContext.get(ctx)!.push({ name: graph.name || label, graph });
+  }
+
+  // Get all unique contexts
+  const allContexts = new Set([...defsByContext.keys(), ...graphsByContext.keys()]);
+
+  // Build context nodes at root level
+  const rootNodes: Node[] = [];
+  let rootX = 150;
+  for (const contextName of allContexts) {
+    const defs = defsByContext.get(contextName) || [];
+    const ctxGraphs = graphsByContext.get(contextName) || [];
+
+    // Build definition nodes for this context
+    const defNodes: Node[] = [];
+    let defX = 0;
+    let defY = 0;
+    for (const def of defs) {
+      const defNode: Node = {
+        name: def.name,
+        type: def.name,
+        props: [
+          { name: 'category', type: 'string', value: def.category || '' },
+          ...(def.description ? [{ name: 'description', type: 'string', value: def.description }] : []),
+        ],
+        inputs: def.inputs,
+        outputs: def.outputs,
+        meta: { x: defX, y: defY },
+      };
+      // If digital asset, include the internal graph nodes/edges so user can dive in
+      if (def.graph) {
+        defNode.nodes = def.graph.nodes;
+        defNode.edges = def.graph.edges;
+      }
+      defNodes.push(defNode);
+      defX += 250;
+      if (defX > 1000) { defX = 0; defY += 150; }
+    }
+
+    // Build graph instance nodes for this context
+    const graphNodes: Node[] = [];
+    let graphY = 0;
+    for (const { name: graphName, graph } of ctxGraphs) {
+      graphNodes.push({
+        name: graphName,
+        type: graphName,
+        nodes: graph.nodes,
+        edges: graph.edges,
+        meta: { x: 150, y: graphY },
+      });
+      graphY += 120;
+    }
+
+    // Each context contains "definitions" and "graphs" sub-folders
+    const contextChildren: Node[] = [];
+    if (defNodes.length > 0) {
+      contextChildren.push({
+        name: 'definitions',
+        type: 'definitions',
+        nodes: defNodes,
+        edges: [],
+        meta: { x: 150, y: 100 },
+      });
+    }
+    if (graphNodes.length > 0) {
+      contextChildren.push({
+        name: 'graphs',
+        type: 'graphs',
+        nodes: graphNodes,
+        edges: [],
+        meta: { x: 450, y: 100 },
+      });
+    }
+
+    rootNodes.push({
+      name: contextName,
+      type: contextName,
+      nodes: contextChildren,
+      edges: [],
+      meta: { x: rootX, y: 150 },
+    });
+    rootX += 250;
+  }
+
+  return {
+    name: 'workspace',
+    context: 'js',
+    definitions: definitions,
+    nodes: rootNodes,
+    edges: []
+  };
+}
+
 const exampleNames = Object.keys(examples);
+const workspaceKey = '📂 Workspace (Browse All)';
 
 export default function Home() {
   const [selectedExample, setSelectedExample] = useState(exampleNames[0]);
-  const graph = examples[selectedExample];
+  const isWorkspace = selectedExample === workspaceKey;
+  const graph = useMemo(() => {
+    if (isWorkspace) {
+      return buildWorkspaceGraph([...allDefinitions, weightedAddDef], examples);
+    }
+    return examples[selectedExample];
+  }, [selectedExample, isWorkspace]);
+
 
   return (
     <div className="h-screen w-screen flex flex-col">
@@ -587,6 +715,8 @@ export default function Home() {
           onChange={(e) => setSelectedExample(e.target.value)}
           className="bg-slate-700 text-slate-200 text-sm rounded px-3 py-1.5 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
+          <option value={workspaceKey}>{workspaceKey}</option>
+          <option disabled>──────────</option>
           {exampleNames.map((name) => (
             <option key={name} value={name}>
               {name}

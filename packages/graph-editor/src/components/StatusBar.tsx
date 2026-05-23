@@ -1,5 +1,6 @@
 import React from 'react';
 import { useGraph, useSelection, useNavigation } from '../context/GraphContext';
+import { getNodesAtScope, getEdgesAtScope } from '../utils/graphTransform';
 
 export function StatusBar() {
   const { state } = useGraph();
@@ -7,8 +8,10 @@ export function StatusBar() {
   const { navigationStack, canGoUp } = useNavigation();
   
   const selectedCount = selection.nodeIds.size + selection.edgeIds.size;
-  const nodeCount = state.graph.nodes.length;
-  const edgeCount = state.graph.edges.length;
+  const scopedNodes = getNodesAtScope(state.graph, state.cwd);
+  const scopedEdges = getEdgesAtScope(state.graph, state.cwd);
+  const nodeCount = scopedNodes.length;
+  const edgeCount = scopedEdges.length;
   const zoomPercent = Math.round(state.view.zoom * 100);
 
   return (
