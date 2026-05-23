@@ -8,10 +8,11 @@ describe('evaluate', () => {
     it('should evaluate a simple add graph', async () => {
       const graph: Graph = {
         name: 'simple-add',
+        context: 'js',
         nodes: [
-          { name: 'num1', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 5 }] },
-          { name: 'num2', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 3 }] },
-          { name: 'add', type: 'js/math/add' }
+          { name: 'num1', type: 'number', props: [{ name: 'value', type: 'number', value: 5 }] },
+          { name: 'num2', type: 'number', props: [{ name: 'value', type: 'number', value: 3 }] },
+          { name: 'add', type: 'add' }
         ],
         edges: [
           { src: { node: 'num1', port: 'value' }, dst: { node: 'add', port: 'a' } },
@@ -31,12 +32,13 @@ describe('evaluate', () => {
     it('should evaluate a chained math graph (add then multiply)', async () => {
       const graph: Graph = {
         name: 'chained-math',
+        context: 'js',
         nodes: [
-          { name: 'num1', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 2 }] },
-          { name: 'num2', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 3 }] },
-          { name: 'num3', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 4 }] },
-          { name: 'add', type: 'js/math/add' },
-          { name: 'multiply', type: 'js/math/multiply' }
+          { name: 'num1', type: 'number', props: [{ name: 'value', type: 'number', value: 2 }] },
+          { name: 'num2', type: 'number', props: [{ name: 'value', type: 'number', value: 3 }] },
+          { name: 'num3', type: 'number', props: [{ name: 'value', type: 'number', value: 4 }] },
+          { name: 'add', type: 'add' },
+          { name: 'multiply', type: 'multiply' }
         ],
         edges: [
           { src: { node: 'num1', port: 'value' }, dst: { node: 'add', port: 'a' } },
@@ -63,18 +65,19 @@ describe('evaluate', () => {
       const trackingDefs = mathDefinitions.map(def => ({
         ...def,
         impl: (inputs: Record<string, any>, props: Record<string, any>) => {
-          evaluatedNodes.push(def.type);
+          evaluatedNodes.push(def.name);
           return def.impl!(inputs, props);
         }
       }));
 
       const graph: Graph = {
         name: 'lazy-test',
+        context: 'js',
         nodes: [
-          { name: 'num1', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 5 }] },
-          { name: 'num2', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 3 }] },
-          { name: 'unused', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 999 }] },
-          { name: 'add', type: 'js/math/add' }
+          { name: 'num1', type: 'number', props: [{ name: 'value', type: 'number', value: 5 }] },
+          { name: 'num2', type: 'number', props: [{ name: 'value', type: 'number', value: 3 }] },
+          { name: 'unused', type: 'number', props: [{ name: 'value', type: 'number', value: 999 }] },
+          { name: 'add', type: 'add' }
         ],
         edges: [
           { src: { node: 'num1', port: 'value' }, dst: { node: 'add', port: 'a' } },
@@ -90,9 +93,9 @@ describe('evaluate', () => {
       });
 
       // 'unused' node should NOT be evaluated
-      expect(evaluatedNodes).toContain('js/const/number');
-      expect(evaluatedNodes).toContain('js/math/add');
-      expect(evaluatedNodes.filter(n => n === 'js/const/number').length).toBe(2); // Only num1 and num2
+      expect(evaluatedNodes).toContain('number');
+      expect(evaluatedNodes).toContain('add');
+      expect(evaluatedNodes.filter(n => n === 'number').length).toBe(2); // Only num1 and num2
     });
   });
 
@@ -100,10 +103,11 @@ describe('evaluate', () => {
     it('should generate a simple page vdom', async () => {
       const graph: Graph = {
         name: 'simple-page',
+        context: 'js',
         nodes: [
           { 
             name: 'page', 
-            type: 'ui/layout/Page', 
+            type: 'Page', 
             props: [
               { name: 'key', type: 'string', value: 'home' },
               { name: 'className', type: 'string', value: 'min-h-screen' }
@@ -130,10 +134,11 @@ describe('evaluate', () => {
     it('should generate a form with children using edge array order', async () => {
       const graph: Graph = {
         name: 'form-with-children',
+        context: 'js',
         nodes: [
           { 
             name: 'form', 
-            type: 'ui/form/Form', 
+            type: 'Form', 
             props: [
               { name: 'key', type: 'string', value: 'myForm' },
               { name: 'className', type: 'string', value: 'flex gap-4' }
@@ -141,7 +146,7 @@ describe('evaluate', () => {
           },
           { 
             name: 'emailInput', 
-            type: 'ui/form/Input', 
+            type: 'Input', 
             props: [
               { name: 'key', type: 'string', value: 'email' },
               { name: 'name', type: 'string', value: 'email' },
@@ -151,7 +156,7 @@ describe('evaluate', () => {
           },
           { 
             name: 'submitButton', 
-            type: 'ui/form/Button', 
+            type: 'Button', 
             props: [
               { name: 'key', type: 'string', value: 'submit' },
               { name: 'type', type: 'string', value: 'submit' },
@@ -194,10 +199,11 @@ describe('evaluate', () => {
     it('should respect edge array ordering', async () => {
       const graph: Graph = {
         name: 'array-order',
+        context: 'js',
         nodes: [
           { 
             name: 'form', 
-            type: 'ui/form/Form', 
+            type: 'Form', 
             props: [
               { name: 'key', type: 'string', value: 'myForm' },
               { name: 'className', type: 'string', value: '' }
@@ -205,7 +211,7 @@ describe('evaluate', () => {
           },
           { 
             name: 'first', 
-            type: 'ui/form/Button', 
+            type: 'Button', 
             props: [
               { name: 'key', type: 'string', value: 'first' },
               { name: 'text', type: 'string', value: 'First' }
@@ -213,7 +219,7 @@ describe('evaluate', () => {
           },
           { 
             name: 'second', 
-            type: 'ui/form/Button', 
+            type: 'Button', 
             props: [
               { name: 'key', type: 'string', value: 'second' },
               { name: 'text', type: 'string', value: 'Second' }
@@ -241,10 +247,11 @@ describe('evaluate', () => {
     it('should generate the full newsletter page example', async () => {
       const graph: Graph = {
         name: 'newsletter-page',
+        context: 'js',
         nodes: [
           { 
             name: 'page', 
-            type: 'ui/layout/Page', 
+            type: 'Page', 
             props: [
               { name: 'key', type: 'string', value: 'home' },
               { name: 'className', type: 'string', value: 'min-h-screen' }
@@ -252,7 +259,7 @@ describe('evaluate', () => {
           },
           { 
             name: 'form', 
-            type: 'ui/form/Form', 
+            type: 'Form', 
             props: [
               { name: 'key', type: 'string', value: 'newsletterForm' },
               { name: 'className', type: 'string', value: 'mt-10 flex gap-x-4' }
@@ -260,7 +267,7 @@ describe('evaluate', () => {
           },
           { 
             name: 'emailInput', 
-            type: 'ui/form/Input', 
+            type: 'Input', 
             props: [
               { name: 'key', type: 'string', value: 'email' },
               { name: 'name', type: 'string', value: 'email' },
@@ -270,7 +277,7 @@ describe('evaluate', () => {
           },
           { 
             name: 'submitButton', 
-            type: 'ui/form/Button', 
+            type: 'Button', 
             props: [
               { name: 'key', type: 'string', value: 'submit' },
               { name: 'type', type: 'string', value: 'submit' },
@@ -355,10 +362,11 @@ describe('evaluate', () => {
       // Graph A: Flat graph with all nodes at the same level
       const flatGraph: Graph = {
         name: 'flat-page',
+        context: 'js',
         nodes: [
           { 
             name: 'page', 
-            type: 'ui/layout/Page', 
+            type: 'Page', 
             props: [
               { name: 'key', type: 'string', value: 'home' },
               { name: 'className', type: 'string', value: 'container' }
@@ -366,7 +374,7 @@ describe('evaluate', () => {
           },
           { 
             name: 'header', 
-            type: 'ui/content/Text', 
+            type: 'Text', 
             props: [
               { name: 'key', type: 'string', value: 'header' },
               { name: 'content', type: 'string', value: 'Welcome' }
@@ -374,7 +382,7 @@ describe('evaluate', () => {
           },
           { 
             name: 'form', 
-            type: 'ui/form/Form', 
+            type: 'Form', 
             props: [
               { name: 'key', type: 'string', value: 'signupForm' },
               { name: 'className', type: 'string', value: 'flex gap-4' }
@@ -382,7 +390,7 @@ describe('evaluate', () => {
           },
           { 
             name: 'emailInput', 
-            type: 'ui/form/Input', 
+            type: 'Input', 
             props: [
               { name: 'key', type: 'string', value: 'email' },
               { name: 'name', type: 'string', value: 'email' },
@@ -392,7 +400,7 @@ describe('evaluate', () => {
           },
           { 
             name: 'submitButton', 
-            type: 'ui/form/Button', 
+            type: 'Button', 
             props: [
               { name: 'key', type: 'string', value: 'submit' },
               { name: 'type', type: 'string', value: 'submit' },
@@ -424,10 +432,11 @@ describe('evaluate', () => {
       // The subnet encapsulates the form section
       const graphWithSubnet: Graph = {
         name: 'page-with-subnet',
+        context: 'js',
         nodes: [
           { 
             name: 'page', 
-            type: 'ui/layout/Page', 
+            type: 'Page', 
             props: [
               { name: 'key', type: 'string', value: 'home' },
               { name: 'className', type: 'string', value: 'container' }
@@ -435,7 +444,7 @@ describe('evaluate', () => {
           },
           { 
             name: 'header', 
-            type: 'ui/content/Text', 
+            type: 'Text', 
             props: [
               { name: 'key', type: 'string', value: 'header' },
               { name: 'content', type: 'string', value: 'Welcome' }
@@ -445,13 +454,13 @@ describe('evaluate', () => {
           { 
             name: 'formSection', 
             type: 'subnet',
-            kind: 'subnet',
+            
             inputs: [],
             outputs: [{ name: 'element', type: 'Element' }],
             nodes: [
               { 
                 name: 'form', 
-                type: 'ui/form/Form', 
+                type: 'Form', 
                 props: [
                   { name: 'key', type: 'string', value: 'signupForm' },
                   { name: 'className', type: 'string', value: 'flex gap-4' }
@@ -459,7 +468,7 @@ describe('evaluate', () => {
               },
               { 
                 name: 'emailInput', 
-                type: 'ui/form/Input', 
+                type: 'Input', 
                 props: [
                   { name: 'key', type: 'string', value: 'email' },
                   { name: 'name', type: 'string', value: 'email' },
@@ -469,7 +478,7 @@ describe('evaluate', () => {
               },
               { 
                 name: 'submitButton', 
-                type: 'ui/form/Button', 
+                type: 'Button', 
                 props: [
                   { name: 'key', type: 'string', value: 'submit' },
                   { name: 'type', type: 'string', value: 'submit' },
@@ -479,7 +488,7 @@ describe('evaluate', () => {
               // Output boundary node - connects form output to subnet output
               { 
                 name: 'output_element', 
-                type: 'graphOutput',
+                type: 'graphOutput', 
                 props: [{ name: 'portName', type: 'string', value: 'element' }]
               }
             ],
@@ -511,10 +520,11 @@ describe('evaluate', () => {
       // Graph with a subnet that takes an input
       const graphWithSubnetInput: Graph = {
         name: 'subnet-with-input',
+        context: 'js',
         nodes: [
           { 
             name: 'page', 
-            type: 'ui/layout/Page', 
+            type: 'Page', 
             props: [
               { name: 'key', type: 'string', value: 'home' },
               { name: 'className', type: 'string', value: '' }
@@ -522,7 +532,7 @@ describe('evaluate', () => {
           },
           { 
             name: 'welcomeText', 
-            type: 'ui/content/Text', 
+            type: 'Text', 
             props: [
               { name: 'key', type: 'string', value: 'welcome' },
               { name: 'content', type: 'string', value: 'Hello World' }
@@ -532,19 +542,19 @@ describe('evaluate', () => {
           { 
             name: 'formWrapper', 
             type: 'subnet',
-            kind: 'subnet',
+            
             inputs: [{ name: 'content', type: 'Element' }],
             outputs: [{ name: 'element', type: 'Element' }],
             nodes: [
               // Input boundary node (property-based naming)
               { 
                 name: 'input_content', 
-                type: 'graphInput',
+                type: 'graphInput', 
                 props: [{ name: 'portName', type: 'string', value: 'content' }]
               },
               { 
                 name: 'form', 
-                type: 'ui/form/Form', 
+                type: 'Form', 
                 props: [
                   { name: 'key', type: 'string', value: 'wrapper' },
                   { name: 'className', type: 'string', value: 'form-wrapper' }
@@ -553,7 +563,7 @@ describe('evaluate', () => {
               // Output boundary node (property-based naming)
               { 
                 name: 'output_element', 
-                type: 'graphOutput',
+                type: 'graphOutput', 
                 props: [{ name: 'portName', type: 'string', value: 'element' }]
               }
             ],
@@ -603,10 +613,11 @@ describe('evaluate', () => {
     it('should use default prop value when no external input is provided', async () => {
       const graph: Graph = {
         name: 'input-default-test',
+        context: 'js',
         nodes: [
           { 
             name: 'input_value', 
-            type: 'graphInput',
+            type: 'graphInput', 
             props: [
               { name: 'portName', type: 'string', value: 'value' },
               { name: 'default', type: 'number', value: 42 }
@@ -614,7 +625,7 @@ describe('evaluate', () => {
           },
           { 
             name: 'output_result', 
-            type: 'graphOutput',
+            type: 'graphOutput', 
             props: [{ name: 'portName', type: 'string', value: 'result' }]
           }
         ],
@@ -635,10 +646,11 @@ describe('evaluate', () => {
     it('should prefer external input over default prop value', async () => {
       const graph: Graph = {
         name: 'input-external-test',
+        context: 'js',
         nodes: [
           { 
             name: 'input_value', 
-            type: 'graphInput',
+            type: 'graphInput', 
             props: [
               { name: 'portName', type: 'string', value: 'value' },
               { name: 'default', type: 'number', value: 42 }
@@ -646,7 +658,7 @@ describe('evaluate', () => {
           },
           { 
             name: 'output_result', 
-            type: 'graphOutput',
+            type: 'graphOutput', 
             props: [{ name: 'portName', type: 'string', value: 'result' }]
           }
         ],

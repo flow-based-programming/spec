@@ -2,8 +2,9 @@ import React, { useCallback } from 'react';
 import { useGraph } from '../context/GraphContext';
 import type { NodeDefinition } from '@fbp/types';
 import { NodeIcon } from './NodeIcon';
+import { BOUNDARY_NODE_KINDS } from '../types';
 
-const BOUNDARY_NODE_TYPES = ['core/graph/input', 'core/graph/output', 'core/graph/prop'];
+const BOUNDARY_NAMES = ['graph/input', 'graph/output', 'graph/prop'];
 
 export function NodePalette() {
   const { state, dispatch } = useGraph();
@@ -21,17 +22,17 @@ export function NodePalette() {
     const position = { x: 200 + Math.random() * 100, y: 200 + Math.random() * 100 };
     
     // Handle boundary nodes specially
-    if (BOUNDARY_NODE_TYPES.includes(definition.type)) {
-      const boundaryType = definition.type === 'core/graph/input' ? 'input' 
-        : definition.type === 'core/graph/output' ? 'output' 
+    if (BOUNDARY_NAMES.includes(definition.name)) {
+      const boundaryType = definition.name === 'graph/input' ? 'input' 
+        : definition.name === 'graph/output' ? 'output' 
         : 'prop';
       dispatch({ type: 'ADD_BOUNDARY_NODE', boundaryType, position });
       return;
     }
     
     const newNode = {
-      name: `${definition.type.split('/').pop()}_${Date.now().toString(36)}`,
-      type: definition.type,
+      name: `${definition.name.split('/').pop()}_${Date.now().toString(36)}`,
+      type: definition.name,
       meta: position
     };
     dispatch({ type: 'ADD_NODE', node: newNode });
@@ -39,8 +40,8 @@ export function NodePalette() {
 
   const handleDragStart = useCallback((e: React.DragEvent, definition: NodeDefinition) => {
     e.dataTransfer.setData('application/fbp-node', JSON.stringify({
-      type: definition.type,
-      isBoundary: BOUNDARY_NODE_TYPES.includes(definition.type)
+      definitionName: definition.name,
+      isBoundary: BOUNDARY_NAMES.includes(definition.name)
     }));
     e.dataTransfer.effectAllowed = 'copy';
   }, []);
@@ -60,15 +61,15 @@ export function NodePalette() {
             <div className="flex flex-col gap-1">
               {defs.map(def => (
                 <button
-                  key={def.type}
+                  key={`${def.context}:${def.name}`}
                   onClick={() => handleAddNode(def)}
                   draggable
                   onDragStart={(e) => handleDragStart(e, def)}
                   className="w-full px-2 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-left text-xs text-slate-300 transition-colors flex items-center gap-2 cursor-grab active:cursor-grabbing"
-                  title={`Drag to add ${def.type}`}
+                  title={`Drag to add ${def.name}`}
                 >
                   {def.icon && <NodeIcon icon={def.icon} size={14} className="opacity-70" />}
-                  <span>{def.type.split('/').pop()}</span>
+                  <span>{def.name.split('/').pop()}</span>
                 </button>
               ))}
             </div>

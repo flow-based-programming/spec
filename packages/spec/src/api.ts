@@ -451,7 +451,7 @@ export function findNodes(
 
 /**
  * Find all boundary nodes (inputs, outputs, props) at a scope.
- * Uses type-based detection (node.type === 'graphInput', 'graphOutput', 'graphProp').
+ * Uses kind-based detection (node.type === 'graphInput', 'graphOutput', 'graphProp').
  * 
  * @param graph - The graph
  * @param scopePath - The scope to search

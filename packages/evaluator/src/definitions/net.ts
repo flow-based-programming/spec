@@ -24,9 +24,9 @@ import type { NodeDefinitionWithImpl } from '../types';
  * - ok: boolean (true if request succeeded without errors)
  */
 export const graphqlRequestDef: NodeDefinitionWithImpl = {
-  context: 'net',
+  context: 'js',
+  name: 'request',
   category: 'graphql',
-  type: 'net/graphql/request',
   icon: 'graphql',
   inputs: [
     { name: 'variables', type: 'json' },

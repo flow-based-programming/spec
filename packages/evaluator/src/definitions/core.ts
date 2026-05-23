@@ -18,9 +18,9 @@ import type { NodeDefinitionWithImpl } from '../types';
  * - value: any (the extracted value)
  */
 export const jsonSelectDef: NodeDefinitionWithImpl = {
-  context: 'core',
+  context: 'js',
+  name: 'select',
   category: 'json',
-  type: 'core/json/select',
   icon: 'circle',
   inputs: [
     { name: 'obj', type: 'json' }
@@ -75,9 +75,9 @@ export const jsonSelectDef: NodeDefinitionWithImpl = {
  * - value: json (the constructed object)
  */
 export const jsonObjectDef: NodeDefinitionWithImpl = {
-  context: 'core',
+  context: 'js',
+  name: 'object',
   category: 'json',
-  type: 'core/json/object',
   icon: 'braces',
   inputs: [], // Dynamic inputs - any input name is valid
   outputs: [
@@ -104,9 +104,9 @@ export const jsonObjectDef: NodeDefinitionWithImpl = {
  * - error: json (the error if failed)
  */
 export const flowGuardDef: NodeDefinitionWithImpl = {
-  context: 'core',
+  context: 'js',
+  name: 'guard',
   category: 'flow',
-  type: 'core/flow/guard',
   icon: 'zap',
   inputs: [
     { name: 'ok', type: 'boolean' },
@@ -151,9 +151,9 @@ export const flowGuardDef: NodeDefinitionWithImpl = {
  * - value: string (the resulting string)
  */
 export const stringTemplateDef: NodeDefinitionWithImpl = {
-  context: 'core',
+  context: 'js',
+  name: 'template',
   category: 'string',
-  type: 'core/string/template',
   icon: 'quote',
   inputs: [], // Dynamic inputs based on template placeholders
   outputs: [
@@ -197,9 +197,9 @@ export const stringTemplateDef: NodeDefinitionWithImpl = {
  * - value: string (the resulting string)
  */
 export const stringConcatDef: NodeDefinitionWithImpl = {
-  context: 'core',
+  context: 'js',
+  name: 'concat',
   category: 'string',
-  type: 'core/string/concat',
   icon: 'link',
   inputs: [
     { name: 'value', type: 'string' }

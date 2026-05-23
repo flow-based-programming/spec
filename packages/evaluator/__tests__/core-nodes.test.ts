@@ -4,14 +4,15 @@ import { coreDefinitions, jsonSelectDef, jsonObjectDef, flowGuardDef, stringTemp
 import { mathDefinitions } from '../__fixtures__/math-definitions';
 
 describe('core nodes', () => {
-  describe('core/json/select', () => {
+  describe('select', () => {
     it('should extract a value by simple path', async () => {
       const graph: Graph = {
         name: 'json-select-simple',
+        context: 'js',
         nodes: [
           { 
             name: 'input_data', 
-            type: 'graphInput',
+            type: 'graphInput', 
             props: [
               { name: 'portName', type: 'string', value: 'data' },
               { name: 'default', type: 'json', value: { user: { name: 'Alice', age: 30 } } }
@@ -19,7 +20,7 @@ describe('core nodes', () => {
           },
           { 
             name: 'select', 
-            type: 'core/json/select',
+            type: 'select',
             props: [{ name: 'path', type: 'string', value: 'user.name' }]
           }
         ],
@@ -40,10 +41,11 @@ describe('core nodes', () => {
     it('should extract a nested value', async () => {
       const graph: Graph = {
         name: 'json-select-nested',
+        context: 'js',
         nodes: [
           { 
             name: 'input_data', 
-            type: 'graphInput',
+            type: 'graphInput', 
             props: [
               { name: 'portName', type: 'string', value: 'data' },
               { name: 'default', type: 'json', value: { response: { data: { users: [{ id: 1 }, { id: 2 }] } } } }
@@ -51,7 +53,7 @@ describe('core nodes', () => {
           },
           { 
             name: 'select', 
-            type: 'core/json/select',
+            type: 'select',
             props: [{ name: 'path', type: 'string', value: 'response.data.users.1.id' }]
           }
         ],
@@ -72,10 +74,11 @@ describe('core nodes', () => {
     it('should return undefined for missing path', async () => {
       const graph: Graph = {
         name: 'json-select-missing',
+        context: 'js',
         nodes: [
           { 
             name: 'input_data', 
-            type: 'graphInput',
+            type: 'graphInput', 
             props: [
               { name: 'portName', type: 'string', value: 'data' },
               { name: 'default', type: 'json', value: { foo: 'bar' } }
@@ -83,7 +86,7 @@ describe('core nodes', () => {
           },
           { 
             name: 'select', 
-            type: 'core/json/select',
+            type: 'select',
             props: [{ name: 'path', type: 'string', value: 'baz.qux' }]
           }
         ],
@@ -102,7 +105,7 @@ describe('core nodes', () => {
     });
   });
 
-  describe('core/json/object', () => {
+  describe('object', () => {
     it('should build an object from inputs', async () => {
       // For this test, we need to use the jsonObjectDef directly since it has dynamic inputs
       const result = jsonObjectDef.impl!(
@@ -121,7 +124,7 @@ describe('core nodes', () => {
     });
   });
 
-  describe('core/flow/guard', () => {
+  describe('guard', () => {
     it('should pass when ok is true', async () => {
       const result = flowGuardDef.impl!(
         { ok: true, error: null },
@@ -162,7 +165,7 @@ describe('core nodes', () => {
     });
   });
 
-  describe('core/string/template', () => {
+  describe('template', () => {
     it('should substitute placeholders', async () => {
       const result = stringTemplateDef.impl!(
         { token: 'abc123' },
@@ -196,7 +199,7 @@ describe('core nodes', () => {
     });
   });
 
-  describe('core/string/concat', () => {
+  describe('concat', () => {
     it('should concatenate with prefix', async () => {
       const result = stringConcatDef.impl!(
         { value: 'token123' },

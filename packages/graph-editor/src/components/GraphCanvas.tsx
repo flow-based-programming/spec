@@ -15,6 +15,14 @@ export function GraphCanvas() {
   const { goUp, canGoUp, diveInto } = useNavigation();
   const { nodes: scopedNodes, edges: scopedEdges } = useScopedGraph();
   
+  // Refs to always access latest values in event handlers (avoids stale closures)
+  const scopedNodesRef = useRef(scopedNodes);
+  scopedNodesRef.current = scopedNodes;
+  const selectionRef = useRef(state.selection.nodeIds);
+  selectionRef.current = state.selection.nodeIds;
+  const cwdRef = useRef(state.cwd);
+  cwdRef.current = state.cwd;
+  
   const svgRef = useRef<SVGSVGElement>(null);
   const bgRef = useRef<SVGRectElement>(null);
   const [isPanning, setIsPanning] = useState(false);
@@ -196,9 +204,8 @@ export function GraphCanvas() {
     setConnectingEnd(null);
   }, [state.connecting, dispatch]);
 
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<SVGSVGElement>) => {
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-
     // Spacebar for pan mode
     if (e.code === 'Space' && !e.repeat) {
       e.preventDefault();
@@ -230,19 +237,7 @@ export function GraphCanvas() {
           setConnectingEnd(null);
         }
         break;
-      case 'u':
-      case 'U':
-        if (canGoUp) goUp();
-        break;
-      case 'Enter':
-        const selectedNodes = Array.from(state.selection.nodeIds);
-        if (selectedNodes.length === 1) {
-          const node = state.graph.nodes.find(n => n.name === selectedNodes[0]);
-          if (node?.nodes && node.nodes.length > 0) {
-            diveInto(selectedNodes[0]);
-          }
-        }
-        break;
+      // U and Enter handled by global document listener (see useEffect below)
       case 'c':
       case 'C':
         if (e.shiftKey && state.selection.nodeIds.size >= 1) {
@@ -270,7 +265,7 @@ export function GraphCanvas() {
     }
   }, [deleteSelection, duplicateSelection, copySelection, pasteSelection, selectAll, clearSelection, canGoUp, goUp, diveInto, collapseSelection, layoutSelection, state.selection.nodeIds, state.graph.nodes, state.connecting.active, dispatch]);
 
-  const handleKeyUp = useCallback((e: KeyboardEvent) => {
+  const handleKeyUp = useCallback((e: React.KeyboardEvent<SVGSVGElement>) => {
     if (e.code === 'Space') {
       setIsSpaceHeld(false);
     }
@@ -289,7 +284,7 @@ export function GraphCanvas() {
     if (!data) return;
 
     try {
-      const { type, isBoundary } = JSON.parse(data);
+      const { definitionName, isBoundary } = JSON.parse(data);
       const rect = svgRef.current?.getBoundingClientRect();
       if (!rect) return;
 
@@ -300,14 +295,14 @@ export function GraphCanvas() {
       );
 
       if (isBoundary) {
-        const boundaryType = type === 'core/graph/input' ? 'input' 
-          : type === 'core/graph/output' ? 'output' 
+        const boundaryType = definitionName === 'graph/input' ? 'input' 
+          : definitionName === 'graph/output' ? 'output' 
           : 'prop';
         dispatch({ type: 'ADD_BOUNDARY_NODE', boundaryType, position });
       } else {
         const newNode = {
-          name: `${type.split('/').pop()}_${Date.now().toString(36)}`,
-          type,
+          name: `${definitionName.split('/').pop()}_${Date.now().toString(36)}`,
+          type: definitionName,
           meta: position
         };
         dispatch({ type: 'ADD_NODE', node: newNode });
@@ -317,14 +312,43 @@ export function GraphCanvas() {
     }
   }, [state.view, dispatch]);
 
+  // Auto-focus the SVG canvas on mount and after navigation changes
   useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
+    svgRef.current?.focus();
+  }, [state.cwd]);
+
+  // Global keyboard listener for navigation keys (U/Enter) —
+  // always uses document-level listener so it works regardless of focus state
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Skip if user is typing in an input field
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+
+      if (e.key === 'u' || e.key === 'U') {
+        if (!e.metaKey && !e.ctrlKey && !e.altKey) {
+          const currentCwd = cwdRef.current;
+          if (currentCwd !== '/') {
+            e.preventDefault();
+            dispatch({ type: 'GO_UP' });
+            svgRef.current?.focus();
+          }
+        }
+      } else if (e.key === 'Enter') {
+        const currentSelection = Array.from(selectionRef.current);
+        const currentScopedNodes = scopedNodesRef.current;
+        if (currentSelection.length === 1) {
+          const node = currentScopedNodes.find(n => n.name === currentSelection[0]);
+          if (node?.nodes && node.nodes.length > 0) {
+            e.preventDefault();
+            dispatch({ type: 'DIVE_INTO', nodeId: currentSelection[0] });
+            svgRef.current?.focus();
+          }
+        }
+      }
     };
-  }, [handleKeyDown, handleKeyUp]);
+    document.addEventListener('keydown', handleGlobalKeyDown);
+    return () => document.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [dispatch]);
 
   const getConnectingStartPos = (): Point | null => {
     if (!state.connecting.active || !state.connecting.sourceNode || !state.connecting.sourcePort) {
@@ -357,7 +381,11 @@ export function GraphCanvas() {
   return (
     <svg
       ref={svgRef}
-      className="w-full h-full bg-slate-950"
+      tabIndex={0}
+      className="w-full h-full bg-slate-950 outline-none"
+      onKeyDown={handleKeyDown}
+      onKeyUp={handleKeyUp}
+      onMouseDownCapture={() => svgRef.current?.focus()}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}

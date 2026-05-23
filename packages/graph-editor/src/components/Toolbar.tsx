@@ -24,14 +24,14 @@ interface NodePaletteItemProps {
 }
 
 function NodePaletteItem({ definition, onDragStart }: NodePaletteItemProps) {
-  const shortName = definition.type.split('/').pop() || definition.type;
+  const shortName = definition.name.split('/').pop() || definition.name;
   
   return (
     <div
       draggable
       onDragStart={() => onDragStart(definition)}
       className="px-2 py-1.5 bg-slate-700 hover:bg-slate-600 rounded cursor-grab text-xs text-slate-300 transition-colors"
-      title={definition.type}
+      title={definition.name}
     >
       {shortName}
     </div>
@@ -59,8 +59,8 @@ export function Toolbar() {
 
   const handleAddNode = (definition: NodeDefinition) => {
     const newNode = {
-      name: `${definition.type.split('/').pop()}_${Date.now().toString(36)}`,
-      type: definition.type,
+      name: `${definition.name.split('/').pop()}_${Date.now().toString(36)}`,
+      type: definition.name,
       meta: { x: 200, y: 200 }
     };
     dispatch({ type: 'ADD_NODE', node: newNode });
@@ -88,12 +88,12 @@ export function Toolbar() {
                   <div className="flex flex-col gap-1">
                     {defs.map(def => (
                       <div
-                        key={def.type}
+                        key={`${def.context}:${def.name}`}
                         onClick={() => handleAddNode(def)}
                         className="px-2 py-1.5 bg-slate-700 hover:bg-slate-600 rounded cursor-pointer text-xs text-slate-300 transition-colors"
-                        title={`Click to add ${def.type}`}
+                        title={`Click to add ${def.name}`}
                       >
-                        {def.type.split('/').pop()}
+                        {def.name.split('/').pop()}
                       </div>
                     ))}
                   </div>

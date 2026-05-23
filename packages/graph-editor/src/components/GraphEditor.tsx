@@ -12,6 +12,7 @@ type EvaluateFn = (graph: Graph, options: { definitions: any[]; outputNode: stri
 interface GraphEditorProps {
   graph?: Graph;
   definitions?: NodeDefinition[];
+  initialCwd?: string;
   showPropertiesPanel?: boolean;
   showNodePalette?: boolean;
   showStatusBar?: boolean;
@@ -26,6 +27,7 @@ interface GraphEditorProps {
 export function GraphEditor({
   graph,
   definitions,
+  initialCwd,
   showPropertiesPanel = true,
   showNodePalette = true,
   showStatusBar = true,
@@ -36,7 +38,7 @@ export function GraphEditor({
   evaluateFn
 }: GraphEditorProps) {
   return (
-    <GraphProvider initialGraph={graph} externalDefinitions={definitions} onSelectionChange={onSelectionChange}>
+    <GraphProvider initialGraph={graph} initialCwd={initialCwd} externalDefinitions={definitions} onSelectionChange={onSelectionChange}>
       <div className={`flex flex-col h-full bg-slate-900 ${className}`}>
         <div className="h-10 bg-slate-800 border-b border-slate-700 flex items-center px-4 flex-shrink-0">
           <span className="text-sm font-medium text-slate-300">FBP Graph Editor</span>

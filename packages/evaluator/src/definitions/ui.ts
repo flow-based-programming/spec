@@ -25,8 +25,8 @@ function coerceValue(value: any, valueType: string): any {
 // Boundary node definitions for graph inputs/outputs
 export const graphInputDef: NodeDefinitionWithImpl = {
   context: 'core',
+  name: 'graphInput',
   category: 'graph',
-  type: 'core/graph/input',
   icon: 'arrow-right',
   inputs: [],
   outputs: [{ name: 'value', type: 'any' }],
@@ -40,8 +40,8 @@ export const graphInputDef: NodeDefinitionWithImpl = {
 
 export const graphOutputDef: NodeDefinitionWithImpl = {
   context: 'core',
+  name: 'graphOutput',
   category: 'graph',
-  type: 'core/graph/output',
   icon: 'arrow-left',
   inputs: [{ name: 'value', type: 'any' }],
   outputs: [],
@@ -54,8 +54,8 @@ export const graphOutputDef: NodeDefinitionWithImpl = {
 
 export const graphPropDef: NodeDefinitionWithImpl = {
   context: 'core',
+  name: 'graphProp',
   category: 'graph',
-  type: 'core/graph/prop',
   icon: 'settings',
   inputs: [],
   outputs: [{ name: 'value', type: 'any' }],
@@ -68,9 +68,9 @@ export const graphPropDef: NodeDefinitionWithImpl = {
 };
 
 export const pageDef: NodeDefinitionWithImpl = {
-  context: 'ui',
+  context: 'js',
+  name: 'Page',
   category: 'layout',
-  type: 'ui/layout/Page',
   icon: 'file',
   inputs: [
     { name: 'children', type: 'Element[]', multi: true }
@@ -92,9 +92,9 @@ export const pageDef: NodeDefinitionWithImpl = {
 };
 
 export const formDef: NodeDefinitionWithImpl = {
-  context: 'ui',
+  context: 'js',
+  name: 'Form',
   category: 'form',
-  type: 'ui/form/Form',
   icon: 'file-text',
   inputs: [
     { name: 'children', type: 'Element[]', multi: true }
@@ -116,9 +116,9 @@ export const formDef: NodeDefinitionWithImpl = {
 };
 
 export const inputDef: NodeDefinitionWithImpl = {
-  context: 'ui',
+  context: 'js',
+  name: 'Input',
   category: 'form',
-  type: 'ui/form/Input',
   icon: 'text-cursor',
   inputs: [],
   outputs: [{ name: 'element', type: 'Element' }],
@@ -143,9 +143,9 @@ export const inputDef: NodeDefinitionWithImpl = {
 };
 
 export const buttonDef: NodeDefinitionWithImpl = {
-  context: 'ui',
+  context: 'js',
+  name: 'Button',
   category: 'form',
-  type: 'ui/form/Button',
   icon: 'square',
   inputs: [],
   outputs: [{ name: 'element', type: 'Element' }],
@@ -168,9 +168,9 @@ export const buttonDef: NodeDefinitionWithImpl = {
 };
 
 export const textDef: NodeDefinitionWithImpl = {
-  context: 'ui',
+  context: 'js',
+  name: 'Text',
   category: 'content',
-  type: 'ui/content/Text',
   icon: 'type',
   inputs: [],
   outputs: [{ name: 'element', type: 'Element' }],

@@ -60,17 +60,21 @@
 
     "Node": {
       "type": "object",
-      "description": "A node in the graph. For subnets, the interface is defined by boundary nodes (type='graphInput', 'graphOutput', 'graphProp') inside - NO separate inputs/outputs/props arrays.",
+      "description": "A node instance in the graph. References a NodeDefinition by name. System types (graphInput/graphOutput/graphProp) are reserved names handled by the evaluator natively.",
       "properties": {
         "name": {
           "type": "string",
           "minLength": 1,
-          "description": "Unique name within the parent scope."
+          "description": "Unique instance name within the parent scope."
         },
         "type": {
           "type": "string",
           "minLength": 1,
-          "description": "Node type (references a NodeDefinition)."
+          "description": "References a NodeDefinition by name. System types: graphInput, graphOutput, graphProp."
+        },
+        "context": {
+          "type": "string",
+          "description": "Optional context override for cross-context references. If omitted, inherits from the parent graph."
         },
         "meta": { "$ref": "#/definitions/NodeMeta" },
         "props": {
@@ -95,11 +99,15 @@
 
     "Graph": {
       "type": "object",
-      "description": "Top-level graph container. Interface is defined by boundary nodes (type='graphInput', 'graphOutput', 'graphProp') at root level - NO separate inputs/outputs/props arrays.",
+      "description": "Top-level graph container. The context field determines which evaluator/runtime handles execution. Interface is defined by boundary nodes (kind='graphInput', 'graphOutput', 'graphProp').",
       "properties": {
         "name": {
           "type": "string",
           "description": "Optional graph name."
+        },
+        "context": {
+          "type": "string",
+          "description": "Evaluation context/runtime (e.g., 'js', 'function', 'sql', 'workflow'). Determines which evaluator handles this graph."
         },
         "nodes": {
           "type": "array",
@@ -127,7 +135,8 @@
       "description": "A port definition on a node type.",
       "properties": {
         "name": { "type": "string", "minLength": 1 },
-        "type": { "type": "string", "description": "Data type (e.g., 'string', 'number', 'any')." },
+        "type": { "type": "string", "description": "Data type shorthand (e.g., 'string', 'number', 'boolean', 'json', 'any', 'Element', 'signal')." },
+        "schema": { "type": "object", "description": "Optional JSON Schema for structured type validation. Use when the simple type string is insufficient (e.g., typed object shapes, enums, unions)." },
         "multi": { "type": "boolean", "description": "If true, accepts multiple connections." },
         "description": { "type": "string" }
       },
@@ -140,7 +149,8 @@
       "description": "A property definition on a node type.",
       "properties": {
         "name": { "type": "string", "minLength": 1 },
-        "type": { "type": "string" },
+        "type": { "type": "string", "description": "Data type shorthand (e.g., 'string', 'number', 'boolean', 'json', 'any')." },
+        "schema": { "type": "object", "description": "Optional JSON Schema for structured type validation." },
         "default": { "description": "Default value." },
         "description": { "type": "string" }
       },
@@ -150,20 +160,21 @@
 
     "NodeDefinition": {
       "type": "object",
-      "description": "Definition of a node type (like a class).",
+      "description": "Definition of a node type. Identity is the (context, name) tuple. When a graph field is present, this is a digital asset (composite node) whose implementation is the internal sub-graph. When absent, it is a leaf node requiring an external implementation.",
       "properties": {
-        "type": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Unique type identifier (e.g., 'math/add')."
-        },
         "context": {
           "type": "string",
-          "description": "Namespace (e.g., 'math', 'ui')."
+          "minLength": 1,
+          "description": "Evaluation context/runtime this definition belongs to (e.g., 'js', 'function', 'sql', 'workflow'). Determines which evaluator can execute this node."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Local identifier within the context (e.g., 'add', 'template', 'request')."
         },
         "category": {
           "type": "string",
-          "description": "Category for palette organization."
+          "description": "Category for editor palette organization (not part of identity)."
         },
         "inputs": {
           "type": "array",
@@ -175,18 +186,27 @@
         },
         "props": {
           "type": "array",
-          "items": { "$ref": "#/definitions/PropDef" }
+          "items": { "$ref": "#/definitions/PropDef" },
+          "description": "Promoted parameters. For digital assets, these flow into graphProp boundary nodes in the internal graph."
+        },
+        "graph": {
+          "$ref": "#/definitions/Graph",
+          "description": "Internal sub-graph (digital asset). When present, boundary nodes (graphInput/graphOutput/graphProp) define the interface. The graph IS the implementation."
+        },
+        "volatile": {
+          "type": "boolean",
+          "description": "If true, this node must always be re-evaluated even when inputs haven't changed (e.g., http/fetch, time/now)."
         },
         "icon": { "type": "string" },
         "description": { "type": "string" }
       },
-      "required": ["type"],
+      "required": ["context", "name"],
       "additionalProperties": false
     }
   },
 
   "x-spec-rules": [
-    "Boundary nodes ARE the interface: Nodes with type='graphInput', 'graphOutput', or 'graphProp' define the subnet's ports. The port/prop name is stored in the portName/propName property. No separate inputs/outputs/props arrays.",
+    "Boundary nodes ARE the interface: Nodes with kind='graphInput', 'graphOutput', or 'graphProp' define the graph's ports. The port/prop name is stored in the portName/propName property.",
     "Edges are per-scope: Each node with children stores its own edges array.",
     "Paths: Node identity is path-based (e.g., '/subnet1/nested/myNode'). Root is '/'.",
     "Minimal storage: Only store what's needed to reconstruct the graph. Derived data is computed at runtime."

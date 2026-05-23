@@ -3,7 +3,7 @@ import { useGraph, useSelection, useScopedGraph } from '../context/GraphContext'
 import type { PropDefinition, Prop, Graph } from '@fbp/types';
 import { clsx } from 'clsx';
 import { CodeEditor } from './CodeEditor';
-import { BOUNDARY_NODE_TYPES, isBoundaryNode, getPortNameFromBoundary } from '../types';
+import { BOUNDARY_NODE_KINDS, isBoundaryNode, getPortNameFromBoundary } from '../types';
 
 // Type for evaluate function passed from parent
 type EvaluateFn = (graph: Graph, options: { definitions: any[]; outputNode: string; outputPort: string }) => Promise<any>;
@@ -67,7 +67,7 @@ export function PropertiesPanel({ evaluationResult: externalResult, onRefreshEva
     if (editedName && editedName !== editableNameValue && nodeName && selectedNode) {
       if (nodeIsBoundary) {
         // Update the portName or propName property
-        const propName = selectedNode.type === BOUNDARY_NODE_TYPES.prop ? 'propName' : 'portName';
+        const propName = selectedNode.type === BOUNDARY_NODE_KINDS.prop ? 'propName' : 'portName';
         dispatch({ type: 'SET_NODE_PROP', nodeId: nodeName, propName, value: editedName });
       } else {
         dispatch({ type: 'RENAME_NODE', oldName: nodeName, newName: editedName });
@@ -89,6 +89,7 @@ export function PropertiesPanel({ evaluationResult: externalResult, onRefreshEva
   const scopedGraph = useMemo((): Graph => {
     return {
       name: state.cwd === '/' ? state.graph.name : `scope:${state.cwd}`,
+      context: state.graph.context,
       nodes: scopedNodes,
       edges: scopedEdges,
       inputs: state.graph.inputs,
@@ -96,7 +97,7 @@ export function PropertiesPanel({ evaluationResult: externalResult, onRefreshEva
       props: state.graph.props,
       definitions: state.graph.definitions
     };
-  }, [state.cwd, state.graph.name, state.graph.inputs, state.graph.outputs, state.graph.props, state.graph.definitions, scopedNodes, scopedEdges]);
+  }, [state.cwd, state.graph.name, state.graph.context, state.graph.inputs, state.graph.outputs, state.graph.props, state.graph.definitions, scopedNodes, scopedEdges]);
   
   // Evaluate when output node is selected and we have evaluateFn
   const handleEvaluate = useCallback(async () => {
@@ -308,7 +309,7 @@ function PropertyField({ definition, value, onChange, isChannelRef, nodeType }: 
   const displayValue = value ?? definition.default ?? '';
   
   // Check if this property should use a code editor (e.g., GraphQL document field)
-  const isGraphQLDocument = nodeType === 'net/graphql/request' && definition.name === 'document';
+  const isGraphQLDocument = nodeType === 'graphql/request' && definition.name === 'document';
   const isCodeField = isGraphQLDocument;
 
   const renderInput = () => {

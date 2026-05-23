@@ -6,8 +6,8 @@ import type { NodeDefinitionWithImpl } from '../types';
 
 export const constNumberDef: NodeDefinitionWithImpl = {
   context: 'js',
+  name: 'number',
   category: 'const',
-  type: 'js/const/number',
   icon: 'hash',
   outputs: [{ name: 'value', type: 'number' }],
   props: [{ name: 'value', type: 'number', default: 0 }],
@@ -19,8 +19,8 @@ export const constNumberDef: NodeDefinitionWithImpl = {
 
 export const addDef: NodeDefinitionWithImpl = {
   context: 'js',
+  name: 'add',
   category: 'math',
-  type: 'js/math/add',
   icon: 'plus',
   inputs: [
     { name: 'a', type: 'number' },
@@ -35,8 +35,8 @@ export const addDef: NodeDefinitionWithImpl = {
 
 export const multiplyDef: NodeDefinitionWithImpl = {
   context: 'js',
+  name: 'multiply',
   category: 'math',
-  type: 'js/math/multiply',
   icon: 'x',
   inputs: [
     { name: 'a', type: 'number' },

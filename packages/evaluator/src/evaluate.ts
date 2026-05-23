@@ -2,6 +2,13 @@ import type { Graph, Node, Edge, Port } from '@fbp/types';
 import type { NodeDefinitionWithImpl, EvaluateOptions } from './types';
 
 /**
+ * Build a definition map key from context and name.
+ */
+function defKey(context: string, name: string): string {
+  return `${context}:${name}`;
+}
+
+/**
  * Evaluate a graph starting from the specified output node/port.
  * Uses lazy evaluation - only evaluates nodes that are needed for the output.
  * Fully async to support async node implementations.
@@ -21,8 +28,11 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
 
   const defMap = new Map<string, NodeDefinitionWithImpl>();
   for (const def of definitions) {
-    defMap.set(def.type, def);
+    defMap.set(defKey(def.context, def.name), def);
   }
+
+  // Graph-level context used as default for node lookups
+  const graphContext = graph.context || '';
 
   // Build edge lookup: destination node -> destination port -> edges (in array order)
   const edgesByDst = new Map<string, Map<string, Edge[]>>();
@@ -58,8 +68,8 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
       throw new Error(`Node not found: ${nodeName}`);
     }
 
-    // Handle special boundary nodes (graphInput, graphOutput, graphProp)
-    // Boundary nodes are identified by their type property, not by name prefix
+    // Handle system nodes (graphInput, graphOutput, graphProp)
+    // System nodes are identified by their type name — reserved, no definition lookup needed
     if (node.type === 'graphInput') {
       // Get the port name from the portName property
       const portNameProp = node.props?.find(p => p.name === 'portName');
@@ -100,8 +110,8 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
       return result;
     }
 
-    // Handle subnet nodes (kind: 'subnet')
-    if (node.kind === 'subnet' && node.nodes && node.edges) {
+    // Handle subnet nodes (type: 'subnet' with inline nodes/edges)
+    if (node.type === 'subnet' && node.nodes && node.edges) {
       // Collect inputs for the subnet by evaluating upstream nodes
       const subnetInputs: Record<string, any> = {};
       const subnetPortEdges = edgesByDst.get(nodeName);
@@ -137,6 +147,7 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
           const subnetResult = await evaluate(
             {
               name: `${nodeName}_subnet`,
+              context: graphContext || undefined,
               nodes: node.nodes,
               edges: node.edges
             },
@@ -156,14 +167,11 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
       return subnetOutputs;
     }
 
-    // Get the definition for this node type
-    const definition = defMap.get(node.type);
+    // Get the definition for this node — resolve context from node override or graph default
+    const nodeContext = node.context || graphContext;
+    const definition = defMap.get(defKey(nodeContext, node.type));
     if (!definition) {
-      throw new Error(`No definition found for node type: ${node.type}`);
-    }
-
-    if (!definition.impl) {
-      throw new Error(`No implementation found for node type: ${node.type}`);
+      throw new Error(`No definition found for node: ${nodeContext}:${node.type}`);
     }
 
     // Collect inputs by evaluating upstream nodes
@@ -175,14 +183,12 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
         const edges = portEdges?.get(inputPort.name) ?? [];
         
         if (inputPort.multi) {
-          // Multi-input port: collect all values in edge array order
           const values = await Promise.all(edges.map(async edge => {
             const upstreamOutputs = await evaluateNode(edge.src.node);
             return upstreamOutputs[edge.src.port];
           }));
           nodeInputs[inputPort.name] = values;
         } else {
-          // Single input: take first edge if exists
           if (edges.length > 0) {
             const edge = edges[0];
             const upstreamOutputs = await evaluateNode(edge.src.node);
@@ -192,25 +198,50 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
       }
     }
 
-    // Get props from node instance
+    // Get props from node instance (override definition defaults)
     const nodeProps: Record<string, any> = {};
     if (definition.props) {
       for (const propDef of definition.props) {
-        // First check node instance props
         const instanceProp = node.props?.find(p => p.name === propDef.name);
         if (instanceProp !== undefined && instanceProp.value !== undefined) {
           nodeProps[propDef.name] = instanceProp.value;
         } else if (propDef.default !== undefined) {
-          // Fall back to definition default
           nodeProps[propDef.name] = propDef.default;
         }
       }
     }
 
-    // Call the implementation (await in case it's async)
+    // Digital asset: definition has an internal graph — evaluate it recursively
+    if (definition.graph) {
+      const assetGraph = definition.graph;
+
+      // Find all output boundary nodes in the asset's graph
+      const assetOutputs: Record<string, any> = {};
+      const outputBoundaryNodes = assetGraph.nodes.filter(n => n.type === 'graphOutput');
+
+      for (const outputBoundaryNode of outputBoundaryNodes) {
+        const portNameProp = outputBoundaryNode.props?.find(p => p.name === 'portName');
+        const portName = (portNameProp?.value as string) || outputBoundaryNode.name;
+
+        const result = await evaluate(
+          { name: `${nodeName}_asset`, context: assetGraph.context, nodes: assetGraph.nodes, edges: assetGraph.edges },
+          { definitions, outputNode: outputBoundaryNode.name, outputPort: 'value', inputs: nodeInputs, props: nodeProps }
+        );
+
+        assetOutputs[portName] = result;
+      }
+
+      cache.set(nodeName, assetOutputs);
+      return assetOutputs;
+    }
+
+    // Leaf node: call the implementation function
+    if (!definition.impl) {
+      throw new Error(`No implementation found for node: ${nodeContext}:${node.type}`);
+    }
+
     const outputs = await definition.impl(nodeInputs, nodeProps);
     
-    // Cache and return
     cache.set(nodeName, outputs);
     return outputs;
   }
