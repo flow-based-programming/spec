@@ -53,7 +53,7 @@ export interface PropDef {
 export interface NodeDefinition {
     context: string;
     name: string;
-    category?: string;
+    category: string;
     inputs?: PortDef[];
     outputs?: PortDef[];
     props?: PropDef[];

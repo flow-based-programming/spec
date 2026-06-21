@@ -25,7 +25,7 @@ import type { NodeDefinitionWithImpl } from '@fbp/evaluator';
 // Define node implementations
 const addDef: NodeDefinitionWithImpl = {
   context: 'js',
-  name: 'math:add',
+  name: 'add',
   category: 'math',
   inputs: [
     { name: 'a', type: 'number' },
@@ -39,7 +39,7 @@ const addDef: NodeDefinitionWithImpl = {
 
 const constNumberDef: NodeDefinitionWithImpl = {
   context: 'js',
-  name: 'const:number',
+  name: 'number',
   category: 'const',
   props: [{ name: 'value', type: 'number' }],
   outputs: [{ name: 'value', type: 'number' }],
@@ -117,7 +117,8 @@ Supports ports that accept multiple incoming edges. Values are collected in edge
 
 ```typescript
 const mergeDef: NodeDefinitionWithImpl = {
-  name: 'array:merge',
+  name: 'merge',
+  category: 'array',
   inputs: [{ name: 'items', type: 'any', multi: true }],
   outputs: [{ name: 'array', type: 'any[]' }],
   impl: (inputs) => ({
@@ -147,7 +148,7 @@ const result = evaluate(graph, {
 const mathNodes: NodeDefinitionWithImpl[] = [
   {
     context: 'js',
-    name: 'math:add',
+    name: 'add',
     category: 'math',
     inputs: [
       { name: 'a', type: 'number' },
@@ -158,7 +159,7 @@ const mathNodes: NodeDefinitionWithImpl[] = [
   },
   {
     context: 'js',
-    name: 'math:multiply',
+    name: 'multiply',
     category: 'math',
     inputs: [
       { name: 'a', type: 'number' },
@@ -169,7 +170,7 @@ const mathNodes: NodeDefinitionWithImpl[] = [
   },
   {
     context: 'js',
-    name: 'math:negate',
+    name: 'negate',
     category: 'math',
     inputs: [{ name: 'value', type: 'number' }],
     outputs: [{ name: 'negated', type: 'number' }],
@@ -180,7 +181,7 @@ const mathNodes: NodeDefinitionWithImpl[] = [
 
 ## Best Practices
 
-1. Use descriptive names in `category:name` format (e.g., `math:add`, `const:number`)
+1. Use short names on definitions (e.g., `name: 'add'`); the task_identifier `category:name` is used in `Node.type` (e.g., `type: 'math:add'`)
 2. Always provide default values in `impl` functions for missing inputs
 3. Keep node implementations pure — no side effects
 4. Use `multi: true` for ports that should accept multiple connections

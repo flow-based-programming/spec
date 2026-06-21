@@ -19,7 +19,7 @@ exports.coreDefinitions = exports.stringConcatDef = exports.stringTemplateDef = 
  */
 exports.jsonSelectDef = {
     context: 'js',
-    name: 'json:select',
+    name: 'select',
     category: 'json',
     icon: 'circle',
     inputs: [
@@ -73,7 +73,7 @@ exports.jsonSelectDef = {
  */
 exports.jsonObjectDef = {
     context: 'js',
-    name: 'json:object',
+    name: 'object',
     category: 'json',
     icon: 'braces',
     inputs: [], // Dynamic inputs - any input name is valid
@@ -101,7 +101,7 @@ exports.jsonObjectDef = {
  */
 exports.flowGuardDef = {
     context: 'js',
-    name: 'flow:guard',
+    name: 'guard',
     category: 'flow',
     icon: 'zap',
     inputs: [
@@ -147,7 +147,7 @@ exports.flowGuardDef = {
  */
 exports.stringTemplateDef = {
     context: 'js',
-    name: 'string:template',
+    name: 'template',
     category: 'string',
     icon: 'quote',
     inputs: [], // Dynamic inputs based on template placeholders
@@ -189,7 +189,7 @@ exports.stringTemplateDef = {
  */
 exports.stringConcatDef = {
     context: 'js',
-    name: 'string:concat',
+    name: 'concat',
     category: 'string',
     icon: 'link',
     inputs: [

@@ -6,7 +6,7 @@ exports.mathDefinitions = exports.multiplyDef = exports.addDef = exports.constNu
  */
 exports.constNumberDef = {
     context: 'js',
-    name: 'const:number',
+    name: 'number',
     category: 'const',
     icon: 'hash',
     outputs: [{ name: 'value', type: 'number' }],
@@ -18,7 +18,7 @@ exports.constNumberDef = {
 };
 exports.addDef = {
     context: 'js',
-    name: 'math:add',
+    name: 'add',
     category: 'math',
     icon: 'plus',
     inputs: [
@@ -33,7 +33,7 @@ exports.addDef = {
 };
 exports.multiplyDef = {
     context: 'js',
-    name: 'math:multiply',
+    name: 'multiply',
     category: 'math',
     icon: 'x',
     inputs: [

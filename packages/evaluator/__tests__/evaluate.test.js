@@ -80,9 +80,9 @@ describe('evaluate', () => {
                 outputPort: 'sum'
             });
             // 'unused' node should NOT be evaluated
-            expect(evaluatedNodes).toContain('const:number');
-            expect(evaluatedNodes).toContain('math:add');
-            expect(evaluatedNodes.filter(n => n === 'const:number').length).toBe(2); // Only num1 and num2
+            expect(evaluatedNodes).toContain('number');
+            expect(evaluatedNodes).toContain('add');
+            expect(evaluatedNodes.filter(n => n === 'number').length).toBe(2); // Only num1 and num2
         });
     });
     describe('UI vdom generation', () => {

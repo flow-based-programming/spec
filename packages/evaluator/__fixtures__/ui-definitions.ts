@@ -69,7 +69,7 @@ export const graphPropDef: NodeDefinitionWithImpl = {
 
 export const pageDef: NodeDefinitionWithImpl = {
   context: 'js',
-  name: 'layout:Page',
+  name: 'Page',
   category: 'layout',
   icon: 'file',
   inputs: [
@@ -93,7 +93,7 @@ export const pageDef: NodeDefinitionWithImpl = {
 
 export const formDef: NodeDefinitionWithImpl = {
   context: 'js',
-  name: 'form:Form',
+  name: 'Form',
   category: 'form',
   icon: 'file-text',
   inputs: [
@@ -117,7 +117,7 @@ export const formDef: NodeDefinitionWithImpl = {
 
 export const inputDef: NodeDefinitionWithImpl = {
   context: 'js',
-  name: 'form:Input',
+  name: 'Input',
   category: 'form',
   icon: 'text-cursor',
   inputs: [],
@@ -144,7 +144,7 @@ export const inputDef: NodeDefinitionWithImpl = {
 
 export const buttonDef: NodeDefinitionWithImpl = {
   context: 'js',
-  name: 'form:Button',
+  name: 'Button',
   category: 'form',
   icon: 'square',
   inputs: [],
@@ -169,7 +169,7 @@ export const buttonDef: NodeDefinitionWithImpl = {
 
 export const textDef: NodeDefinitionWithImpl = {
   context: 'js',
-  name: 'content:Text',
+  name: 'Text',
   category: 'content',
   icon: 'type',
   inputs: [],

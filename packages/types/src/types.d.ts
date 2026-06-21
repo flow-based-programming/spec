@@ -48,7 +48,7 @@ export interface Group {
 export interface NodeDefinition {
     context: string;
     name: string;
-    category?: string;
+    category: string;
     inputs?: Port[];
     outputs?: Port[];
     props?: PropDefinition[];

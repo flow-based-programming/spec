@@ -26,7 +26,7 @@ const graph: Graph = {
   definitions: [
     {
       context: 'js',
-      name: 'math:add',
+      name: 'add',
       category: 'math',
       inputs: [
         { name: 'a', type: 'number' },
@@ -158,14 +158,14 @@ const initialGraph: Graph = {
   definitions: [
     {
       context: 'js',
-      name: 'const:number',
+      name: 'number',
       category: 'const',
       props: [{ name: 'value', type: 'number', default: 0 }],
       outputs: [{ name: 'value', type: 'number' }]
     },
     {
       context: 'js',
-      name: 'math:add',
+      name: 'add',
       category: 'math',
       inputs: [
         { name: 'a', type: 'number' },

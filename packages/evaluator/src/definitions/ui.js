@@ -66,7 +66,7 @@ exports.graphPropDef = {
 };
 exports.pageDef = {
     context: 'js',
-    name: 'layout:Page',
+    name: 'Page',
     category: 'layout',
     icon: 'file',
     inputs: [
@@ -89,7 +89,7 @@ exports.pageDef = {
 };
 exports.formDef = {
     context: 'js',
-    name: 'form:Form',
+    name: 'Form',
     category: 'form',
     icon: 'file-text',
     inputs: [
@@ -112,7 +112,7 @@ exports.formDef = {
 };
 exports.inputDef = {
     context: 'js',
-    name: 'form:Input',
+    name: 'Input',
     category: 'form',
     icon: 'text-cursor',
     inputs: [],
@@ -138,7 +138,7 @@ exports.inputDef = {
 };
 exports.buttonDef = {
     context: 'js',
-    name: 'form:Button',
+    name: 'Button',
     category: 'form',
     icon: 'square',
     inputs: [],
@@ -162,7 +162,7 @@ exports.buttonDef = {
 };
 exports.textDef = {
     context: 'js',
-    name: 'content:Text',
+    name: 'Text',
     category: 'content',
     icon: 'type',
     inputs: [],

@@ -74,8 +74,8 @@ interface PortRef {
 ```typescript
 interface NodeDefinition {
   context: string;            // Execution context (e.g., "js", "core")
-  name: string;               // Unique identifier using category:name format (e.g., "math:add")
-  category?: string;          // Palette category (e.g., "math", "json", "flow")
+  name: string;               // Short identifier (e.g., "add", "number", "Page")
+  category: string;            // Required grouping + part of composite key (e.g., "math", "json")
   inputs?: PortDef[];         // Input port definitions
   outputs?: PortDef[];        // Output port definitions
   props?: PropDef[];          // Property definitions

@@ -25,7 +25,7 @@ exports.netDefinitions = exports.graphqlRequestDef = void 0;
  */
 exports.graphqlRequestDef = {
     context: 'js',
-    name: 'graphql:request',
+    name: 'request',
     category: 'graphql',
     icon: 'graphql',
     inputs: [

@@ -8,7 +8,7 @@ describe('digital assets', () => {
     // A "double" digital asset: takes a number, multiplies it by 2
     const doubleDef: NodeDefinitionWithImpl = {
       context: 'js',
-      name: 'math:double',
+      name: 'double',
       category: 'math',
       inputs: [{ name: 'x', type: 'number' }],
       outputs: [{ name: 'result', type: 'number' }],
@@ -86,7 +86,7 @@ describe('digital assets', () => {
     // A "weighted-add" digital asset: a*weight_a + b*weight_b
     const weightedAddDef: NodeDefinitionWithImpl = {
       context: 'js',
-      name: 'math:weighted-add',
+      name: 'weighted-add',
       category: 'math',
       inputs: [
         { name: 'a', type: 'number' },
@@ -238,7 +238,7 @@ describe('digital assets', () => {
     // "double" asset: x * 2
     const doubleDef: NodeDefinitionWithImpl = {
       context: 'js',
-      name: 'math:double',
+      name: 'double',
       category: 'math',
       inputs: [{ name: 'x', type: 'number' }],
       outputs: [{ name: 'result', type: 'number' }],
@@ -262,7 +262,7 @@ describe('digital assets', () => {
     // "quadruple" asset: uses math/double twice (double of double)
     const quadrupleDef: NodeDefinitionWithImpl = {
       context: 'js',
-      name: 'math:quadruple',
+      name: 'quadruple',
       category: 'math',
       inputs: [{ name: 'x', type: 'number' }],
       outputs: [{ name: 'result', type: 'number' }],
@@ -318,7 +318,7 @@ describe('digital assets', () => {
         definitions: [
           {
             context: 'js',
-            name: 'math:triple',
+            name: 'triple',
             category: 'math',
             inputs: [{ name: 'x', type: 'number' }],
             outputs: [{ name: 'result', type: 'number' }],
@@ -367,7 +367,8 @@ describe('digital assets', () => {
     it('should throw if digital asset has no output boundary nodes', async () => {
       const emptyAssetDef: NodeDefinitionWithImpl = {
         context: 'js',
-        name: 'broken/empty',
+        name: 'empty',
+        category: 'broken',
         inputs: [{ name: 'x', type: 'number' }],
         outputs: [{ name: 'result', type: 'number' }],
         graph: {
@@ -385,7 +386,7 @@ describe('digital assets', () => {
         context: 'js',
         nodes: [
           { name: 'num', type: 'const:number', props: [{ name: 'value', type: 'number', value: 5 }] },
-          { name: 'empty', type: 'broken/empty' }
+          { name: 'empty', type: 'broken:empty' }
         ],
         edges: [
           { src: { node: 'num', port: 'value' }, dst: { node: 'empty', port: 'x' } }
@@ -405,7 +406,8 @@ describe('digital assets', () => {
     it('should throw if leaf node has no impl', async () => {
       const noImplDef: NodeDefinitionWithImpl = {
         context: 'js',
-        name: 'broken/no-impl',
+        name: 'no-impl',
+        category: 'broken',
         inputs: [{ name: 'x', type: 'number' }],
         outputs: [{ name: 'result', type: 'number' }]
         // No impl, no graph
@@ -416,7 +418,7 @@ describe('digital assets', () => {
         context: 'js',
         nodes: [
           { name: 'num', type: 'const:number', props: [{ name: 'value', type: 'number', value: 5 }] },
-          { name: 'broken', type: 'broken/no-impl' }
+          { name: 'broken', type: 'broken:no-impl' }
         ],
         edges: [
           { src: { node: 'num', port: 'value' }, dst: { node: 'broken', port: 'x' } }
@@ -427,7 +429,7 @@ describe('digital assets', () => {
         definitions: [...mathDefinitions, noImplDef],
         outputNode: 'broken',
         outputPort: 'result'
-      })).rejects.toThrow('No implementation found for node: js:broken/no-impl');
+      })).rejects.toThrow('No implementation found for node: js:broken:no-impl');
     });
   });
 });
