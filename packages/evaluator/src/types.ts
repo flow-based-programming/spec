@@ -1,4 +1,4 @@
-import type { NodeDefinition, PropDefinition } from '@fbp/types';
+import type { NodeDefinition } from '@fbp/types';
 
 /**
  * A function that implements a node's computation.
@@ -11,20 +11,11 @@ export type NodeImplFn = (
 ) => Record<string, any> | Promise<Record<string, any>>;
 
 /**
- * Extended PropDefinition with runtime-only options for enum/select types.
- * The options field is not part of the JSON schema but is used by the UI.
- */
-export interface PropDefinitionWithOptions extends PropDefinition {
-  options?: string[];
-}
-
-/**
  * A NodeDefinition extended with an optional implementation function.
  * The impl function is not part of the JSON schema (not serializable),
  * but is used at runtime for evaluation.
  */
-export interface NodeDefinitionWithImpl extends Omit<NodeDefinition, 'props'> {
-  props?: PropDefinitionWithOptions[];
+export interface NodeDefinitionWithImpl extends NodeDefinition {
   impl?: NodeImplFn;
 }
 

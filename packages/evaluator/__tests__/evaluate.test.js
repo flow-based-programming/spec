@@ -9,9 +9,9 @@ describe('evaluate', () => {
             const graph = {
                 name: 'simple-add',
                 nodes: [
-                    { name: 'num1', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 5 }] },
-                    { name: 'num2', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 3 }] },
-                    { name: 'add', type: 'js/math/add' }
+                    { name: 'num1', type: 'const:number', props: [{ name: 'value', type: 'number', value: 5 }] },
+                    { name: 'num2', type: 'const:number', props: [{ name: 'value', type: 'number', value: 3 }] },
+                    { name: 'add', type: 'math:add' }
                 ],
                 edges: [
                     { src: { node: 'num1', port: 'value' }, dst: { node: 'add', port: 'a' } },
@@ -29,11 +29,11 @@ describe('evaluate', () => {
             const graph = {
                 name: 'chained-math',
                 nodes: [
-                    { name: 'num1', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 2 }] },
-                    { name: 'num2', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 3 }] },
-                    { name: 'num3', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 4 }] },
-                    { name: 'add', type: 'js/math/add' },
-                    { name: 'multiply', type: 'js/math/multiply' }
+                    { name: 'num1', type: 'const:number', props: [{ name: 'value', type: 'number', value: 2 }] },
+                    { name: 'num2', type: 'const:number', props: [{ name: 'value', type: 'number', value: 3 }] },
+                    { name: 'num3', type: 'const:number', props: [{ name: 'value', type: 'number', value: 4 }] },
+                    { name: 'add', type: 'math:add' },
+                    { name: 'multiply', type: 'math:multiply' }
                 ],
                 edges: [
                     { src: { node: 'num1', port: 'value' }, dst: { node: 'add', port: 'a' } },
@@ -56,17 +56,17 @@ describe('evaluate', () => {
             const trackingDefs = math_definitions_1.mathDefinitions.map(def => ({
                 ...def,
                 impl: (inputs, props) => {
-                    evaluatedNodes.push(def.type);
+                    evaluatedNodes.push(def.name);
                     return def.impl(inputs, props);
                 }
             }));
             const graph = {
                 name: 'lazy-test',
                 nodes: [
-                    { name: 'num1', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 5 }] },
-                    { name: 'num2', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 3 }] },
-                    { name: 'unused', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 999 }] },
-                    { name: 'add', type: 'js/math/add' }
+                    { name: 'num1', type: 'const:number', props: [{ name: 'value', type: 'number', value: 5 }] },
+                    { name: 'num2', type: 'const:number', props: [{ name: 'value', type: 'number', value: 3 }] },
+                    { name: 'unused', type: 'const:number', props: [{ name: 'value', type: 'number', value: 999 }] },
+                    { name: 'add', type: 'math:add' }
                 ],
                 edges: [
                     { src: { node: 'num1', port: 'value' }, dst: { node: 'add', port: 'a' } },
@@ -80,9 +80,9 @@ describe('evaluate', () => {
                 outputPort: 'sum'
             });
             // 'unused' node should NOT be evaluated
-            expect(evaluatedNodes).toContain('js/const/number');
-            expect(evaluatedNodes).toContain('js/math/add');
-            expect(evaluatedNodes.filter(n => n === 'js/const/number').length).toBe(2); // Only num1 and num2
+            expect(evaluatedNodes).toContain('number');
+            expect(evaluatedNodes).toContain('add');
+            expect(evaluatedNodes.filter(n => n === 'number').length).toBe(2); // Only num1 and num2
         });
     });
     describe('UI vdom generation', () => {
@@ -92,7 +92,7 @@ describe('evaluate', () => {
                 nodes: [
                     {
                         name: 'page',
-                        type: 'ui/layout/Page',
+                        type: 'layout:Page',
                         props: [
                             { name: 'key', type: 'string', value: 'home' },
                             { name: 'className', type: 'string', value: 'min-h-screen' }
@@ -119,7 +119,7 @@ describe('evaluate', () => {
                 nodes: [
                     {
                         name: 'form',
-                        type: 'ui/form/Form',
+                        type: 'form:Form',
                         props: [
                             { name: 'key', type: 'string', value: 'myForm' },
                             { name: 'className', type: 'string', value: 'flex gap-4' }
@@ -127,7 +127,7 @@ describe('evaluate', () => {
                     },
                     {
                         name: 'emailInput',
-                        type: 'ui/form/Input',
+                        type: 'form:Input',
                         props: [
                             { name: 'key', type: 'string', value: 'email' },
                             { name: 'name', type: 'string', value: 'email' },
@@ -137,7 +137,7 @@ describe('evaluate', () => {
                     },
                     {
                         name: 'submitButton',
-                        type: 'ui/form/Button',
+                        type: 'form:Button',
                         props: [
                             { name: 'key', type: 'string', value: 'submit' },
                             { name: 'type', type: 'string', value: 'submit' },
@@ -180,7 +180,7 @@ describe('evaluate', () => {
                 nodes: [
                     {
                         name: 'form',
-                        type: 'ui/form/Form',
+                        type: 'form:Form',
                         props: [
                             { name: 'key', type: 'string', value: 'myForm' },
                             { name: 'className', type: 'string', value: '' }
@@ -188,7 +188,7 @@ describe('evaluate', () => {
                     },
                     {
                         name: 'first',
-                        type: 'ui/form/Button',
+                        type: 'form:Button',
                         props: [
                             { name: 'key', type: 'string', value: 'first' },
                             { name: 'text', type: 'string', value: 'First' }
@@ -196,7 +196,7 @@ describe('evaluate', () => {
                     },
                     {
                         name: 'second',
-                        type: 'ui/form/Button',
+                        type: 'form:Button',
                         props: [
                             { name: 'key', type: 'string', value: 'second' },
                             { name: 'text', type: 'string', value: 'Second' }
@@ -224,7 +224,7 @@ describe('evaluate', () => {
                 nodes: [
                     {
                         name: 'page',
-                        type: 'ui/layout/Page',
+                        type: 'layout:Page',
                         props: [
                             { name: 'key', type: 'string', value: 'home' },
                             { name: 'className', type: 'string', value: 'min-h-screen' }
@@ -232,7 +232,7 @@ describe('evaluate', () => {
                     },
                     {
                         name: 'form',
-                        type: 'ui/form/Form',
+                        type: 'form:Form',
                         props: [
                             { name: 'key', type: 'string', value: 'newsletterForm' },
                             { name: 'className', type: 'string', value: 'mt-10 flex gap-x-4' }
@@ -240,7 +240,7 @@ describe('evaluate', () => {
                     },
                     {
                         name: 'emailInput',
-                        type: 'ui/form/Input',
+                        type: 'form:Input',
                         props: [
                             { name: 'key', type: 'string', value: 'email' },
                             { name: 'name', type: 'string', value: 'email' },
@@ -250,7 +250,7 @@ describe('evaluate', () => {
                     },
                     {
                         name: 'submitButton',
-                        type: 'ui/form/Button',
+                        type: 'form:Button',
                         props: [
                             { name: 'key', type: 'string', value: 'submit' },
                             { name: 'type', type: 'string', value: 'submit' },
@@ -334,7 +334,7 @@ describe('evaluate', () => {
                 nodes: [
                     {
                         name: 'page',
-                        type: 'ui/layout/Page',
+                        type: 'layout:Page',
                         props: [
                             { name: 'key', type: 'string', value: 'home' },
                             { name: 'className', type: 'string', value: 'container' }
@@ -342,7 +342,7 @@ describe('evaluate', () => {
                     },
                     {
                         name: 'header',
-                        type: 'ui/content/Text',
+                        type: 'content:Text',
                         props: [
                             { name: 'key', type: 'string', value: 'header' },
                             { name: 'content', type: 'string', value: 'Welcome' }
@@ -350,7 +350,7 @@ describe('evaluate', () => {
                     },
                     {
                         name: 'form',
-                        type: 'ui/form/Form',
+                        type: 'form:Form',
                         props: [
                             { name: 'key', type: 'string', value: 'signupForm' },
                             { name: 'className', type: 'string', value: 'flex gap-4' }
@@ -358,7 +358,7 @@ describe('evaluate', () => {
                     },
                     {
                         name: 'emailInput',
-                        type: 'ui/form/Input',
+                        type: 'form:Input',
                         props: [
                             { name: 'key', type: 'string', value: 'email' },
                             { name: 'name', type: 'string', value: 'email' },
@@ -368,7 +368,7 @@ describe('evaluate', () => {
                     },
                     {
                         name: 'submitButton',
-                        type: 'ui/form/Button',
+                        type: 'form:Button',
                         props: [
                             { name: 'key', type: 'string', value: 'submit' },
                             { name: 'type', type: 'string', value: 'submit' },
@@ -400,7 +400,7 @@ describe('evaluate', () => {
                 nodes: [
                     {
                         name: 'page',
-                        type: 'ui/layout/Page',
+                        type: 'layout:Page',
                         props: [
                             { name: 'key', type: 'string', value: 'home' },
                             { name: 'className', type: 'string', value: 'container' }
@@ -408,7 +408,7 @@ describe('evaluate', () => {
                     },
                     {
                         name: 'header',
-                        type: 'ui/content/Text',
+                        type: 'content:Text',
                         props: [
                             { name: 'key', type: 'string', value: 'header' },
                             { name: 'content', type: 'string', value: 'Welcome' }
@@ -424,7 +424,7 @@ describe('evaluate', () => {
                         nodes: [
                             {
                                 name: 'form',
-                                type: 'ui/form/Form',
+                                type: 'form:Form',
                                 props: [
                                     { name: 'key', type: 'string', value: 'signupForm' },
                                     { name: 'className', type: 'string', value: 'flex gap-4' }
@@ -432,7 +432,7 @@ describe('evaluate', () => {
                             },
                             {
                                 name: 'emailInput',
-                                type: 'ui/form/Input',
+                                type: 'form:Input',
                                 props: [
                                     { name: 'key', type: 'string', value: 'email' },
                                     { name: 'name', type: 'string', value: 'email' },
@@ -442,7 +442,7 @@ describe('evaluate', () => {
                             },
                             {
                                 name: 'submitButton',
-                                type: 'ui/form/Button',
+                                type: 'form:Button',
                                 props: [
                                     { name: 'key', type: 'string', value: 'submit' },
                                     { name: 'type', type: 'string', value: 'submit' },
@@ -484,7 +484,7 @@ describe('evaluate', () => {
                 nodes: [
                     {
                         name: 'page',
-                        type: 'ui/layout/Page',
+                        type: 'layout:Page',
                         props: [
                             { name: 'key', type: 'string', value: 'home' },
                             { name: 'className', type: 'string', value: '' }
@@ -492,7 +492,7 @@ describe('evaluate', () => {
                     },
                     {
                         name: 'welcomeText',
-                        type: 'ui/content/Text',
+                        type: 'content:Text',
                         props: [
                             { name: 'key', type: 'string', value: 'welcome' },
                             { name: 'content', type: 'string', value: 'Hello World' }
@@ -514,7 +514,7 @@ describe('evaluate', () => {
                             },
                             {
                                 name: 'form',
-                                type: 'ui/form/Form',
+                                type: 'form:Form',
                                 props: [
                                     { name: 'key', type: 'string', value: 'wrapper' },
                                     { name: 'className', type: 'string', value: 'form-wrapper' }

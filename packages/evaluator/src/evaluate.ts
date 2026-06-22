@@ -2,10 +2,20 @@ import type { Graph, Node, Edge, Port } from '@fbp/types';
 import type { NodeDefinitionWithImpl, EvaluateOptions } from './types';
 
 /**
- * Build a definition map key from context and name.
+ * Build a definition map key from context, category, and name.
  */
-function defKey(context: string, name: string): string {
-  return `${context}:${name}`;
+function defKey(context: string, category: string, name: string): string {
+  return `${context}:${category}:${name}`;
+}
+
+/**
+ * Parse a task_identifier (e.g. 'math:add') into [category, name].
+ * Boundary nodes (no colon) return ['core', type].
+ */
+function parseTaskIdentifier(type: string): [string, string] {
+  const idx = type.indexOf(':');
+  if (idx === -1) return ['core', type];
+  return [type.slice(0, idx), type.slice(idx + 1)];
 }
 
 /**
@@ -28,7 +38,7 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
 
   const defMap = new Map<string, NodeDefinitionWithImpl>();
   for (const def of definitions) {
-    defMap.set(defKey(def.context, def.name), def);
+    defMap.set(defKey(def.context, def.category, def.name), def);
   }
 
   // Graph-level context used as default for node lookups
@@ -169,7 +179,8 @@ export async function evaluate(graph: Graph, options: EvaluateOptions): Promise<
 
     // Get the definition for this node — resolve context from node override or graph default
     const nodeContext = node.context || graphContext;
-    const definition = defMap.get(defKey(nodeContext, node.type));
+    const [nodeCategory, nodeDefName] = parseTaskIdentifier(node.type);
+    const definition = defMap.get(defKey(nodeContext, nodeCategory, nodeDefName));
     if (!definition) {
       throw new Error(`No definition found for node: ${nodeContext}:${node.type}`);
     }

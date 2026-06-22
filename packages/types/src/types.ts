@@ -28,6 +28,7 @@ export interface PropDefinition {
   default?: any;
   description?: string;
   required?: boolean;
+  options?: string[];
 }
 export interface EdgeEndpoint {
   node: string;
@@ -47,12 +48,13 @@ export interface Group {
 export interface NodeDefinition {
   context: string;
   name: string;
-  category?: string;
+  category: string;
   inputs?: Port[];
   outputs?: Port[];
   props?: PropDefinition[];
   graph?: Graph;
   volatile?: boolean;
+  runtime?: string;
   description?: string;
   icon?: string;
 }

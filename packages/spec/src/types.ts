@@ -47,16 +47,19 @@ export interface PropDef {
   schema?: Record<string, any>;
   default?: any;
   description?: string;
+  required?: boolean;
+  options?: string[];
 }
 export interface NodeDefinition {
   context: string;
   name: string;
-  category?: string;
+  category: string;
   inputs?: PortDef[];
   outputs?: PortDef[];
   props?: PropDef[];
   graph?: Graph;
   volatile?: boolean;
+  runtime?: string;
   icon?: string;
   description?: string;
 }

@@ -26,8 +26,8 @@ const graph: Graph = {
   definitions: [
     {
       context: 'js',
+      name: 'add',
       category: 'math',
-      type: 'js/math/add',
       inputs: [
         { name: 'a', type: 'number' },
         { name: 'b', type: 'number' }
@@ -38,7 +38,7 @@ const graph: Graph = {
     }
   ],
   nodes: [
-    { name: 'add1', type: 'js/math/add', meta: { x: 100, y: 100 } }
+    { name: 'add1', type: 'math:add', meta: { x: 100, y: 100 } }
   ],
   edges: []
 };
@@ -60,7 +60,7 @@ The editor uses SVG for rendering, providing crisp visuals at any zoom level. Pa
 
 ### Node Rendering
 
-Nodes display their fully-qualified type paths (e.g., `js/math/add`) and show input/output ports based on their definition.
+Nodes display their type (e.g., `math:add`) and show input/output ports based on their definition.
 
 ### Bezier Edge Connections
 
@@ -157,15 +157,15 @@ const initialGraph: Graph = {
   name: 'calculator',
   definitions: [
     {
-      type: 'js/const/number',
       context: 'js',
+      name: 'number',
       category: 'const',
       props: [{ name: 'value', type: 'number', default: 0 }],
       outputs: [{ name: 'value', type: 'number' }]
     },
     {
-      type: 'js/math/add',
       context: 'js',
+      name: 'add',
       category: 'math',
       inputs: [
         { name: 'a', type: 'number' },
@@ -175,9 +175,9 @@ const initialGraph: Graph = {
     }
   ],
   nodes: [
-    { name: 'num1', type: 'js/const/number', meta: { x: 50, y: 50 }, props: [{ name: 'value', value: 5 }] },
-    { name: 'num2', type: 'js/const/number', meta: { x: 50, y: 150 }, props: [{ name: 'value', value: 3 }] },
-    { name: 'add', type: 'js/math/add', meta: { x: 250, y: 100 } }
+    { name: 'num1', type: 'const:number', meta: { x: 50, y: 50 }, props: [{ name: 'value', value: 5 }] },
+    { name: 'num2', type: 'const:number', meta: { x: 50, y: 150 }, props: [{ name: 'value', value: 3 }] },
+    { name: 'add', type: 'math:add', meta: { x: 250, y: 100 } }
   ],
   edges: [
     { src: { node: 'num1', port: 'value' }, dst: { node: 'add', port: 'a' } },

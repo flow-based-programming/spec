@@ -18,7 +18,7 @@ describe('core nodes', () => {
                     },
                     {
                         name: 'select',
-                        type: 'core/json/select',
+                        type: 'json:select',
                         props: [{ name: 'path', type: 'string', value: 'user.name' }]
                     }
                 ],
@@ -47,7 +47,7 @@ describe('core nodes', () => {
                     },
                     {
                         name: 'select',
-                        type: 'core/json/select',
+                        type: 'json:select',
                         props: [{ name: 'path', type: 'string', value: 'response.data.users.1.id' }]
                     }
                 ],
@@ -76,7 +76,7 @@ describe('core nodes', () => {
                     },
                     {
                         name: 'select',
-                        type: 'core/json/select',
+                        type: 'json:select',
                         props: [{ name: 'path', type: 'string', value: 'baz.qux' }]
                     }
                 ],

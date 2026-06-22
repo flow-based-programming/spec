@@ -1,5 +1,5 @@
 export { evaluate } from './evaluate';
-export type { NodeImplFn, NodeDefinitionWithImpl, EvaluateOptions, PropDefinitionWithOptions } from './types';
+export type { NodeImplFn, NodeDefinitionWithImpl, EvaluateOptions } from './types';
 
 // Re-export node definitions for convenience
 export { mathDefinitions, constNumberDef, addDef, multiplyDef } from './definitions/math';

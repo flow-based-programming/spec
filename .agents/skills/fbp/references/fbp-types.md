@@ -32,6 +32,7 @@ Node identity equals name within parent scope. Names may be hierarchical paths b
 ```typescript
 interface Graph {
   name?: string;
+  context?: string;           // Default context for node lookups
   nodes: Node[];
   edges: Edge[];
   definitions?: NodeDefinition[];
@@ -44,7 +45,8 @@ interface Graph {
 ```typescript
 interface Node {
   name: string;               // Unique within parent scope
-  type: string;               // References a NodeDefinition
+  type: string;               // References a NodeDefinition.name
+  context?: string;           // Override the graph-level context
   meta?: NodeMeta;            // Position and metadata
   props?: PropValue[];        // Property values
   nodes?: Node[];             // Child nodes (makes this a subnet)
@@ -71,12 +73,15 @@ interface PortRef {
 
 ```typescript
 interface NodeDefinition {
-  type: string;               // Unique identifier (e.g., "math/add")
-  context?: string;           // Namespace (e.g., "math", "ui")
-  category?: string;          // Palette category
+  context: string;            // Execution context (e.g., "js", "core")
+  name: string;               // Short identifier (e.g., "add", "number", "Page")
+  category: string;            // Required grouping + part of composite key (e.g., "math", "json")
   inputs?: PortDef[];         // Input port definitions
   outputs?: PortDef[];        // Output port definitions
   props?: PropDef[];          // Property definitions
+  graph?: Graph;              // Inline subgraph (for composite definitions)
+  volatile?: boolean;         // If true, re-evaluate on every tick
+  runtime?: string;           // Execution runtime (e.g., "inline", "http")
   icon?: string;
   description?: string;
 }
@@ -88,6 +93,7 @@ interface NodeDefinition {
 interface PortDef {
   name: string;
   type?: string;              // Data type (e.g., "string", "number", "any")
+  schema?: Record<string, any>; // JSON Schema for complex types
   multi?: boolean;            // Accepts multiple connections
   description?: string;
 }
@@ -95,8 +101,11 @@ interface PortDef {
 interface PropDef {
   name: string;
   type?: string;
+  schema?: Record<string, any>; // JSON Schema for complex types
   default?: any;
   description?: string;
+  required?: boolean;
+  options?: string[];         // Valid values for enum/select types
 }
 
 interface PropValue {

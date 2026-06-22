@@ -7,6 +7,7 @@ export interface Metadata {
 export interface Port {
     name: string;
     type: string;
+    schema?: Record<string, any>;
     description?: string;
     optional?: boolean;
     multi?: boolean;
@@ -23,9 +24,11 @@ export interface Prop {
 export interface PropDefinition {
     name: string;
     type: string;
+    schema?: Record<string, any>;
     default?: any;
     description?: string;
     required?: boolean;
+    options?: string[];
 }
 export interface EdgeEndpoint {
     node: string;
@@ -42,21 +45,23 @@ export interface Group {
     nodes: string[];
     meta?: Metadata;
 }
-export type NodeKind = "node" | "subnet" | "graphInput" | "graphOutput" | "graphProp";
 export interface NodeDefinition {
     context: string;
+    name: string;
     category: string;
-    type: string;
     inputs?: Port[];
     outputs?: Port[];
     props?: PropDefinition[];
+    graph?: Graph;
+    volatile?: boolean;
+    runtime?: string;
     description?: string;
     icon?: string;
 }
 export interface Node {
     name: string;
     type: string;
-    kind?: NodeKind;
+    context?: string;
     meta?: Metadata;
     props?: Prop[];
     inputs?: Port[];
@@ -67,6 +72,7 @@ export interface Node {
 }
 export interface Graph {
     name: string;
+    context?: string;
     definitions?: NodeDefinition[];
     inputs?: Port[];
     outputs?: Port[];

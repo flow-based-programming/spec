@@ -24,9 +24,9 @@ exports.netDefinitions = exports.graphqlRequestDef = void 0;
  * - ok: boolean (true if request succeeded without errors)
  */
 exports.graphqlRequestDef = {
-    context: 'net',
+    context: 'js',
+    name: 'request',
     category: 'graphql',
-    type: 'net/graphql/request',
     icon: 'graphql',
     inputs: [
         { name: 'variables', type: 'json' },

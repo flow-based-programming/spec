@@ -167,4 +167,4 @@ export interface MultiTabEditorState {
     /** Shared clipboard */
     clipboard: ClipboardState;
 }
-export type { Node, Graph, Edge, PortRef, PortDef, PropDef, PropValue, NodeDefinition, NodeMeta, DefinitionLibrary, } from './types';
+export type { Node, Graph, Edge, PortRef, PortDef, PropDef, PropValue, NodeDefinition, NodeMeta, } from './types';

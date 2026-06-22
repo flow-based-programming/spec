@@ -25,8 +25,8 @@ function coerceValue(value, valueType) {
 // Boundary node definitions for graph inputs/outputs
 exports.graphInputDef = {
     context: 'core',
+    name: 'graphInput',
     category: 'graph',
-    type: 'core/graph/input',
     icon: 'arrow-right',
     inputs: [],
     outputs: [{ name: 'value', type: 'any' }],
@@ -39,8 +39,8 @@ exports.graphInputDef = {
 };
 exports.graphOutputDef = {
     context: 'core',
+    name: 'graphOutput',
     category: 'graph',
-    type: 'core/graph/output',
     icon: 'arrow-left',
     inputs: [{ name: 'value', type: 'any' }],
     outputs: [],
@@ -52,8 +52,8 @@ exports.graphOutputDef = {
 };
 exports.graphPropDef = {
     context: 'core',
+    name: 'graphProp',
     category: 'graph',
-    type: 'core/graph/prop',
     icon: 'settings',
     inputs: [],
     outputs: [{ name: 'value', type: 'any' }],
@@ -65,9 +65,9 @@ exports.graphPropDef = {
     impl: (_inputs, props) => ({ value: coerceValue(props?.value ?? props?.default, props?.valueType ?? 'any') })
 };
 exports.pageDef = {
-    context: 'ui',
+    context: 'js',
+    name: 'Page',
     category: 'layout',
-    type: 'ui/layout/Page',
     icon: 'file',
     inputs: [
         { name: 'children', type: 'Element[]', multi: true }
@@ -88,9 +88,9 @@ exports.pageDef = {
     })
 };
 exports.formDef = {
-    context: 'ui',
+    context: 'js',
+    name: 'Form',
     category: 'form',
-    type: 'ui/form/Form',
     icon: 'file-text',
     inputs: [
         { name: 'children', type: 'Element[]', multi: true }
@@ -111,9 +111,9 @@ exports.formDef = {
     })
 };
 exports.inputDef = {
-    context: 'ui',
+    context: 'js',
+    name: 'Input',
     category: 'form',
-    type: 'ui/form/Input',
     icon: 'text-cursor',
     inputs: [],
     outputs: [{ name: 'element', type: 'Element' }],
@@ -137,9 +137,9 @@ exports.inputDef = {
     })
 };
 exports.buttonDef = {
-    context: 'ui',
+    context: 'js',
+    name: 'Button',
     category: 'form',
-    type: 'ui/form/Button',
     icon: 'square',
     inputs: [],
     outputs: [{ name: 'element', type: 'Element' }],
@@ -161,9 +161,9 @@ exports.buttonDef = {
     })
 };
 exports.textDef = {
-    context: 'ui',
+    context: 'js',
+    name: 'Text',
     category: 'content',
-    type: 'ui/content/Text',
     icon: 'type',
     inputs: [],
     outputs: [{ name: 'element', type: 'Element' }],

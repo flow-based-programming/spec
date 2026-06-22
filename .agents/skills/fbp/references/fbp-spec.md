@@ -175,7 +175,7 @@ const newGraph = setPosition(graph, '/add1', 100, 200);
     },
     { 
       "name": "add1", 
-      "type": "math/add", 
+      "type": "math:add", 
       "meta": { "x": 200, "y": 50 }
     },
     { 

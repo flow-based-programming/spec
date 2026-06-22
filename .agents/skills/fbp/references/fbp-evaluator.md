@@ -25,8 +25,8 @@ import type { NodeDefinitionWithImpl } from '@fbp/evaluator';
 // Define node implementations
 const addDef: NodeDefinitionWithImpl = {
   context: 'js',
+  name: 'add',
   category: 'math',
-  type: 'js/math/add',
   inputs: [
     { name: 'a', type: 'number' },
     { name: 'b', type: 'number' }
@@ -39,8 +39,8 @@ const addDef: NodeDefinitionWithImpl = {
 
 const constNumberDef: NodeDefinitionWithImpl = {
   context: 'js',
+  name: 'number',
   category: 'const',
-  type: 'js/const/number',
   props: [{ name: 'value', type: 'number' }],
   outputs: [{ name: 'value', type: 'number' }],
   impl: (inputs, props) => ({
@@ -52,9 +52,9 @@ const constNumberDef: NodeDefinitionWithImpl = {
 const graph: Graph = {
   name: 'simple-add',
   nodes: [
-    { name: 'num1', type: 'js/const/number', props: [{ name: 'value', value: 5 }] },
-    { name: 'num2', type: 'js/const/number', props: [{ name: 'value', value: 3 }] },
-    { name: 'add', type: 'js/math/add' }
+    { name: 'num1', type: 'const:number', props: [{ name: 'value', value: 5 }] },
+    { name: 'num2', type: 'const:number', props: [{ name: 'value', value: 3 }] },
+    { name: 'add', type: 'math:add' }
   ],
   edges: [
     { src: { node: 'num1', port: 'value' }, dst: { node: 'add', port: 'a' } },
@@ -117,7 +117,8 @@ Supports ports that accept multiple incoming edges. Values are collected in edge
 
 ```typescript
 const mergeDef: NodeDefinitionWithImpl = {
-  type: 'js/array/merge',
+  name: 'merge',
+  category: 'array',
   inputs: [{ name: 'items', type: 'any', multi: true }],
   outputs: [{ name: 'array', type: 'any[]' }],
   impl: (inputs) => ({
@@ -147,8 +148,8 @@ const result = evaluate(graph, {
 const mathNodes: NodeDefinitionWithImpl[] = [
   {
     context: 'js',
+    name: 'add',
     category: 'math',
-    type: 'js/math/add',
     inputs: [
       { name: 'a', type: 'number' },
       { name: 'b', type: 'number' }
@@ -158,8 +159,8 @@ const mathNodes: NodeDefinitionWithImpl[] = [
   },
   {
     context: 'js',
+    name: 'multiply',
     category: 'math',
-    type: 'js/math/multiply',
     inputs: [
       { name: 'a', type: 'number' },
       { name: 'b', type: 'number' }
@@ -169,8 +170,8 @@ const mathNodes: NodeDefinitionWithImpl[] = [
   },
   {
     context: 'js',
+    name: 'negate',
     category: 'math',
-    type: 'js/math/negate',
     inputs: [{ name: 'value', type: 'number' }],
     outputs: [{ name: 'negated', type: 'number' }],
     impl: (inputs) => ({ negated: -(inputs.value ?? 0) })
@@ -180,7 +181,7 @@ const mathNodes: NodeDefinitionWithImpl[] = [
 
 ## Best Practices
 
-1. Use descriptive type paths like `context/category/name` (e.g., `js/math/add`)
+1. Use short names on definitions (e.g., `name: 'add'`); the task_identifier `category:name` is used in `Node.type` (e.g., `type: 'math:add'`)
 2. Always provide default values in `impl` functions for missing inputs
 3. Keep node implementations pure — no side effects
 4. Use `multi: true` for ports that should accept multiple connections
