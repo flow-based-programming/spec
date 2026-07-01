@@ -309,6 +309,39 @@ It may be partially or fully excluded from hashing depending on your canonicaliz
 
 ---
 
+## Node Type Convention
+
+The `type` field on a `Node` identifies what kind of processing the node performs.
+
+### Format
+
+```
+category:name[/route]
+```
+
+* **`category`** (required) — domain grouping (e.g. `math`, `const`, `email`, `json`)
+* **`name`** (required) — action name within the category (e.g. `add`, `string`, `send`)
+* **`/route`** (optional) — sub-route for multi-method containers where a single service handles multiple actions
+
+The **colon** (`:`) separates category from name.
+The **slash** (`/`) is reserved for optional routing within a function and must not be used as the category separator.
+
+### Examples
+
+```
+math:add           — pure math addition
+const:string       — constant string value
+email:send         — send an email
+json:select        — extract a value from JSON
+email:postmaster/send   — "send" route within the "postmaster" service
+```
+
+### Boundary Nodes
+
+Boundary node types (`graphInput`, `graphOutput`, `graphProp`) are plain identifiers without a category separator. They are reserved system types.
+
+---
+
 ## Canonicalization & Merkle Hashing
 
 Recommended practices:
