@@ -316,15 +316,14 @@ The `type` field on a `Node` identifies what kind of processing the node perform
 ### Format
 
 ```
-category:name[/route]
+category:name
 ```
 
 * **`category`** (required) — domain grouping (e.g. `math`, `const`, `email`, `json`)
-* **`name`** (required) — action name within the category (e.g. `add`, `string`, `send`)
-* **`/route`** (optional) — sub-route for multi-method containers where a single service handles multiple actions
+* **`name`** (required) — action name within the category (e.g. `add`, `string`, `send`). The name doubles as the HTTP route for HTTP-dispatched nodes.
 
 The **colon** (`:`) separates category from name.
-The **slash** (`/`) is reserved for optional routing within a function and must not be used as the category separator.
+The **slash** (`/`) character is **not allowed** in node type names.
 
 ### Examples
 
@@ -333,7 +332,6 @@ math:add           — pure math addition
 const:string       — constant string value
 email:send         — send an email
 json:select        — extract a value from JSON
-email:postmaster/send   — "send" route within the "postmaster" service
 ```
 
 ### Boundary Nodes

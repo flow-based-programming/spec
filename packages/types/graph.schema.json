@@ -143,7 +143,8 @@
         "type": {
           "type": "string",
           "minLength": 1,
-          "description": "Unique type identifier, typically in format 'context/category/name' (e.g. 'js/math/add')."
+          "pattern": "^[^/]+$",
+          "description": "Unique type identifier in format 'category:name' (e.g. 'math:add'). Slash (/) is not allowed."
         },
         "inputs": {
           "type": "array",

@@ -170,7 +170,8 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "description": "Local identifier within the context (e.g., 'add', 'template', 'request')."
+          "pattern": "^[^/]+$",
+          "description": "Local identifier within the context (e.g., 'add', 'template', 'request'). Slash (/) is not allowed."
         },
         "category": {
           "type": "string",
