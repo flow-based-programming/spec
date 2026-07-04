@@ -19,7 +19,7 @@ import type { NodeDefinitionWithImpl } from '@fbp/evaluator';
 const addDef: NodeDefinitionWithImpl = {
   context: 'js',
   category: 'math',
-  type: 'js/math/add',
+  name: 'add',
   inputs: [
     { name: 'a', type: 'number' },
     { name: 'b', type: 'number' }
@@ -34,9 +34,9 @@ const addDef: NodeDefinitionWithImpl = {
 const graph: Graph = {
   name: 'simple-add',
   nodes: [
-    { name: 'num1', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 5 }] },
-    { name: 'num2', type: 'js/const/number', props: [{ name: 'value', type: 'number', value: 3 }] },
-    { name: 'add', type: 'js/math/add' }
+    { name: 'num1', type: 'const:number', props: [{ name: 'value', type: 'number', value: 5 }] },
+    { name: 'num2', type: 'const:number', props: [{ name: 'value', type: 'number', value: 3 }] },
+    { name: 'add', type: 'math:add' }
   ],
   edges: [
     { src: { node: 'num1', port: 'value' }, dst: { node: 'add', port: 'a' } },
