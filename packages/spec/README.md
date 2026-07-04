@@ -178,7 +178,7 @@ Definition of a reusable node type (like a class).
 
 ```typescript
 interface NodeDefinition {
-  type: string;               // Unique identifier (e.g., "math/add")
+  type: string;               // Unique identifier (e.g., "math:add")
   context?: string;           // Namespace (e.g., "math", "ui")
   category?: string;          // Palette category
   inputs?: PortDef[];         // Input port definitions
@@ -408,13 +408,13 @@ Insert a node at a scope.
 ```typescript
 const newGraph = insertNode(graph, '/', { 
   name: 'add1', 
-  type: 'math/add' 
+  type: 'math:add' 
 });
 
 // Insert into a subnet
 const newGraph = insertNode(graph, '/subnet1', { 
   name: 'multiply1', 
-  type: 'math/multiply' 
+  type: 'math:multiply' 
 });
 ```
 
@@ -531,7 +531,7 @@ const subnetEdges = getEdges(graph, '/subnet1');
 Find nodes recursively matching a predicate.
 
 ```typescript
-const addNodes = findNodes(graph, (node) => node.type === 'math/add');
+const addNodes = findNodes(graph, (node) => node.type === 'math:add');
 // [{ node: {...}, path: '/add1' }, { node: {...}, path: '/subnet1/add2' }]
 ```
 
@@ -607,7 +607,7 @@ A graph that adds two numbers:
       "meta": { "x": 0, "y": 100 },
       "props": [{ "name": "portName", "value": "b" }, { "name": "dataType", "value": "number" }]
     },
-    { "name": "add1", "type": "math/add", "meta": { "x": 200, "y": 50 } },
+    { "name": "add1", "type": "math:add", "meta": { "x": 200, "y": 50 } },
     { 
       "name": "output_result", 
       "type": "graphOutput", 
@@ -646,7 +646,7 @@ A graph with a reusable "double" subnet:
           "type": "graphInput",
           "props": [{ "name": "portName", "value": "x" }]
         },
-        { "name": "mult", "type": "math/multiply", "props": [{ "name": "b", "value": 2 }] },
+        { "name": "mult", "type": "math:multiply", "props": [{ "name": "b", "value": 2 }] },
         { 
           "name": "output_result", 
           "type": "graphOutput",
@@ -704,7 +704,7 @@ graph = insertNode(graph, '/', {
 });
 
 // Add processing node
-graph = insertNode(graph, '/', { name: 'add1', type: 'math/add' });
+graph = insertNode(graph, '/', { name: 'add1', type: 'math:add' });
 
 // Connect edges (reference nodes by their keys)
 graph = addEdge(graph, '/', { 

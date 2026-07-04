@@ -70,13 +70,13 @@ import { insertNode, removeNode, renameNode, moveNode } from '@fbp/spec';
 // Insert a node at root scope
 const newGraph = insertNode(graph, '/', { 
   name: 'add1', 
-  type: 'math/add' 
+  type: 'math:add' 
 });
 
 // Insert into a subnet
 const newGraph = insertNode(graph, '/subnet1', { 
   name: 'multiply1', 
-  type: 'math/multiply' 
+  type: 'math:multiply' 
 });
 
 // Remove a node and connected edges
@@ -130,7 +130,7 @@ const node = getNode(graph, '/subnet1/add1');
 const rootNodes = getNodes(graph, '/');
 const rootEdges = getEdges(graph, '/');
 
-const addNodes = findNodes(graph, (node) => node.type === 'math/add');
+const addNodes = findNodes(graph, (node) => node.type === 'math:add');
 // [{ node: {...}, path: '/add1' }, { node: {...}, path: '/subnet1/add2' }]
 
 const boundary = findBoundaryNodes(graph, '/subnet1');

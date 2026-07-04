@@ -5,7 +5,7 @@ A Houdini-inspired graph editor for Flow-Based Programming built with React, SVG
 ## Features
 
 - **SVG-based canvas** with pan/zoom support
-- **Node rendering** with fully-qualified type paths (e.g., `js/math/add`)
+- **Node rendering** with `category:name` type identifiers (e.g., `math:add`)
 - **Bezier edge connections** between ports
 - **Selection system** with box select, shift-add/remove, and Cmd+D duplicate
 - **Properties panel** auto-generated from `PropDefinition`
@@ -30,7 +30,7 @@ const graph: Graph = {
     {
       context: 'js',
       category: 'math',
-      type: 'js/math/add',
+      name: 'add',
       inputs: [
         { name: 'a', type: 'number' },
         { name: 'b', type: 'number' }
@@ -41,7 +41,7 @@ const graph: Graph = {
     }
   ],
   nodes: [
-    { name: 'add1', type: 'js/math/add', meta: { x: 100, y: 100 } }
+    { name: 'add1', type: 'math:add', meta: { x: 100, y: 100 } }
   ],
   edges: []
 };
